@@ -5,12 +5,13 @@ library(readxl)
 library(haven)
 library(dplyr)
 library(matrixStats)
+library(lme4)
 
 # Import Monadic Data
-dgdp   = read_dta("C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis - Trade Models/gdpcapfinal2017_01_23.dta")
+dgdp   = read_dta("gdpcapfinal2017_01_23.dta")
 dgdp   = mutate(dgdp, ccode = as.numeric(ccode), year = as.numeric(year), gdpcap = as.numeric(gdpcap), lgdpcap, as.numeric(lgdpcap))
-dcap   = read_dta("C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis - Trade Models/NMC_5_0.dta")
-dpol   = read_excel("C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis - Trade Models/p4v2016.xls")
+dcap   = read_dta("NMC_5_0.dta")
+dpol   = read_excel("p4v2016.xls")
 
 # Merge Monadic Data
 dmon = select(dgdp, ccode, year, gdpcap, lgdpcap)
@@ -34,18 +35,18 @@ undirdyads <- function(df, ccode1, ccode2) {
 }
 
 ### Trade Data
-dtrade <- read_csv("C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis - Trade Models/Dyadic_COW_4.0.csv")
+dtrade <- read_csv("Dyadic_COW_4.0.csv")
 dtrade$dyad = undirdyads(dtrade, ccode1, ccode2)
 dtrade$flow1 <- ifelse(dtrade$flow1 < 0, NA, dtrade$flow1)
 dtrade$flow2 <- ifelse(dtrade$flow2 < 0, NA, dtrade$flow2)
 dtrade$smoothtotrade <- ifelse(dtrade$smoothtotrade < 0, NA, dtrade$smoothtotrade)
 
 ### Distance data
-ddist  <- read_csv("C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis - Trade Models/COW_Distance_NewGene_Export.csv")
+ddist  <- read_csv("COW_Distance_NewGene_Export.csv")
 ddist$dyad <- undirdyads(ddist, ccode1, ccode2)
 
 ### Contiguity Data
-dcont  <- read_csv("C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis - Trade Models/COW_Contiguity_NewGeneExport.csv")
+dcont  <- read_csv("COW_Contiguity_NewGeneExport.csv")
 dcont$dyad <- undirdyads(dcont, ccode1, ccode2)
 dcont <- dcont[dcont$ccode1 < dcont$ccode2, ]
 # dcont$dup <- duplicated(dcont[, c("dyad", "year")])
@@ -54,8 +55,8 @@ dcont <- dcont[dcont$ccode1 < dcont$ccode2, ]
 # dsub <- dcont[order("dyad", "year"), ]
 # dsub <- arrange(dcont, dyad, year)
 
-### ICOW data
-dicow  = read_csv("C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis - Trade Models/ICOWprovyr101.csv")
+### ICOW data (global territory data)
+dicow  = read_csv("ICOWprovyr101.csv")
 dicowcol = dicow %>% group_by(dyad, year) %>% summarize(
   dyterrclaim = 1  
 )
@@ -94,6 +95,9 @@ dat$lntrade <- ifelse(dat$trade == 0, 0, log(dat$trade))
 dat$lnccdist <- ifelse(dat$ccdistance == 0, 0, log(dat$ccdistance))
 dat$defense <- ifelse(is.na(dat$defense), 0, dat$defense)
 dat$mid <- ifelse(is.na(dat$mid), 0, 1)
+dat$caprat <- rowMaxs(cbind(dat$cinc1, dat$cinc2)) / (dat$cinc1 + dat$cinc2)
+dat$demdy <- ifelse(dat$polity21 > 5 & dat$polity22 > 5, 1, 0)
+
 # dat$open <- dat$trade / dat$tgdp
 
 # Import PTA/RTA data
@@ -107,12 +111,11 @@ dat$mid <- ifelse(is.na(dat$mid), 0, 1)
 # trade
 
 # OLS
-tm1 <- lm(trade ~ dyterrclaim + gdpcomb + (conttype == 1), data = dat); summary(tm1)
-tm1 <- lm(lntrade ~ dyterrclaim + lngdpcomb + (conttype == 1), data = dat); summary(tm1)
-library(lme4)
-tm1 <- lmer(trade ~ dyterrclaim + gdpcomb + (conttype == 1) + defense + mid + open + (1 | dyad), data = dat); summary(tm1)
+# tm1 <- lm(trade ~ dyterrclaim + gdpcomb + (conttype == 1), data = dat); summary(tm1)
+# tm1 <- lm(lntrade ~ dyterrclaim + lngdpcomb + (conttype == 1), data = dat); summary(tm1)
+# tm1 <- lmer(trade ~ dyterrclaim + gdpcomb + (conttype == 1) + defense + mid + open + (1 | dyad), data = dat); summary(tm1)
 #tm1 <- lmer(trade ~ dyterrclaim + gdpcomb + (conttype == 1) + (dyterrclaim | dyad), data = dat); summary(tm1)
-tm1 <- lmer(lntrade ~ dyterrclaim + lngdpcomb + (conttype == 1) + defense + mid + (1 | dyad), data = dat); summary(tm1)
+tm1 <- lmer(lntrade ~ dyterrclaim + lngdpcomb + (conttype == 1) + defense + mid + caprat + demdy + (1 | dyad), data = dat); summary(tm1)
 
 
 dsub1 <- dat[dat$dyterrclaim == 1, ]
@@ -121,6 +124,37 @@ dsub0$dyterrclaim <- 0
 #predict.merMod
 pred1 <- predict(tm1, dsub1, allow.new.levels = T)
 pred0 <- predict(tm1, dsub0, allow.new.levels = T)
+# why does this require new levels?
+
+
+predout <- with(dsub1, as.data.frame(cbind(dyad, year, lntrade, pred1, pred0)))
+
+# Validity Tests
+hist(predout$lntrade) # larger values - regularized
+hist(predout$pred1)
+var(predout$lntrade, na.rm = T) # larger variance
+var(predout$pred1, na.rm = T)
+median(predout$lntrade, na.rm = T) # medians pretty similar
+median(predout$pred1, na.rm = T)
+mean(predout$lntrade, na.rm = T) # Means pretty similar
+mean(predout$pred1, na.rm = T)
+t.test(mean(predout$lntrade), mean(predout$pred1)) # means are not statistically distinct
+t.test(predout$lntrade, predout$pred1)
+library(coin)
+a <- c(predout$lntrade, predout$pred1)
+b <- c(rep(0, length(a)/2), rep(1, length(a)/2))
+d <- as.data.frame(cbind(a, b))
+d <- na.omit(d)
+median_test(a ~ as.factor(b), d)
+
+# Unrealized trade
+predout$ugtpred <- predout$pred0 - predout$pred1
+predout$ugtobs <- predout$pred0 - predout$lntrade
+
+write.csv("")
+
+# Trade data is in US millions of current dollars (2014?)
+# Maddison GDP Data is in 2011 dollars
 
 #Neural Net
 # library(neuralnet)
@@ -129,3 +163,6 @@ pred0 <- predict(tm1, dsub0, allow.new.levels = T)
 # library(neuralnet)
 # datnarm <- na.omit(dat)
 # nn = neuralnet(trade ~ gdpcomb + dyterrclaim + conttype, data = datnarm)
+
+
+
