@@ -13,47 +13,13 @@ library(MuMIn)
 # dgdp = read_dta("gdpcapfinal2017_01_23.dta")
 # dgdp = mutate(dgdp, ccode = as.numeric(ccode), year = as.numeric(year), gdpcap = as.numeric(gdpcap), lgdpcap, as.numeric(lgdpcap))
 # dmad = see other file
-
-
+madd = read_csv("./data/madd.csv")
 dcap = read_dta("./data/NMC_5_0.dta")
 dpol = read_excel("./data/p4v2016.xls")
 dw   = read_dta("./data/bdm2s2_nation_year_data_may2002.dta")
+chisols <- read_dta('./data/CHISOLSstyr4_0.dta')
+chisols <- dplyr::select(chisols, ccode, year, totalldrtrans, leadertrans, solschange, solschdum, solschange30, solsch30dum, solsminchange, solsminchdum)
 
-# Merge Monadic Data
-#dmon = select(gdp, ccode, year, gdpcap, lgdpcap)
-dmon = full_join(madd, dcap)
-dmon = full_join(dmon, select(dpol, ccode, year, polity2))
-dmon = full_join(dmon, select(dw, ccode, year, W, S))
-dmon = full_join(dmon, madd)
-
-# Check for duplicates
-# sum(duplicated(dmon[, c("ccode", "year")]))
-# dmon[duplicated(dmon[, c("ccode", "year")]),]
-
-dmon$lngdp <- log(dmon$gdp)
-names(dmon$rgdpnapc) <- "gdpcap"
-dmon <- rename(dmon, gdpcap = rgdpnapc)
-dmon$lngdpcap <- log(dmon$gdpcap)
-dmon$lnpop <- log(dmon$pop)
-
-dmon <- dmon %>% arrange(ccode, year) %>% mutate(
-  lgdpcap = lag(gdpcap),
-  lpol = lag(polity2), 
-  lpop = lag(pop),
-  lgdp = lag(gdp), 
-  lcinc = lag(cinc),
-  lagW = lag(W),
-  lagS = lag(S),
-  laglngdp = lag(lngdp),
-  laglngdpcap = lag(lngdpcap),
-  laglnpop = lag(lnpop)
-)
-
-# Create separate versions of monadic data
-dmon1 = dmon %>% select(-"version") %>% setNames(paste0(names(.), "1")) %>% rename(year = year1)
-dmon2 = dmon %>% select(-"version") %>% setNames(paste0(names(.), "2")) %>% rename(year = year2)
-
-########### DYADIC DATA ##########
 ### Create common identifiers for dyadic data
 undirdyads <- function(df, ccode1, ccode2) {
   attach(df)
@@ -65,18 +31,215 @@ undirdyads <- function(df, ccode1, ccode2) {
   return(dyad)
 }
 
-### Trade Data
+### Dyadic trade data
 dtrade <- read_csv("./data/Dyadic_COW_4.0.csv")
 dtrade$dyad = undirdyads(dtrade, ccode1, ccode2)
 dtrade$flow1 <- ifelse(dtrade$flow1 < 0, NA, dtrade$flow1)
 dtrade$flow2 <- ifelse(dtrade$flow2 < 0, NA, dtrade$flow2)
 dtrade$smoothtotrade <- ifelse(dtrade$smoothtotrade < 0, NA, dtrade$smoothtotrade)
 
-### Distance data
+# sum(dtrade1$sflow1 if ccode == 200)
+# sum(dtrade2$sflow2 if ccode == 200)
+
+### Total global trade for each country-year
+# Get sum of imports, exports, and both when country i is ccode1
+dtrade1 <- dtrade %>% group_by(ccode1, year) %>% summarize(
+  imp1 = sum(flow1, na.rm = T), # sum of exports
+  exp1 = sum(flow2, na.rm = T), # sum of imports
+  agg1 = imp1 + exp1
+) %>% rename(ccode = ccode1)
+# Get sum of imports and exports when country i is ccode2
+dtrade2 <- dtrade %>% group_by(ccode2, year) %>% summarize(
+  imp2 = sum(flow2, na.rm = T), 
+  exp2 = sum(flow1, na.rm = T),
+  agg2 = imp2 + exp2
+) %>% rename(ccode = ccode2)
+# Merge dtrade1 and dtrade2 by ccode and year and create aggregate variables
+dtradea <- full_join(dtrade1, dtrade2) %>% mutate (
+  imptot = imp1 + imp2,
+  exptot = exp1 + exp2,
+  aggtot = agg1 + agg2  
+) %>% select(ccode, year, imptot, exptot, aggtot)
+dtradea$lnagg <- ifelse(dtradea$aggtot == 0, 0, log(dtradea$aggtot))
+
+# aggregate ccode1 gets all exports
+# aggregate ccode2 gets all imports
+#tradem <- group_split(dtrade, ccode1, ccode2,keep = TRUE)
+
+### ICOW global territory claim year data
+icow_full_cyr = read_csv("./data/ICOWprovyr101.csv")
+icow_full_cyr$ccode1 = rowMins(cbind(icow_full_cyr$chal, icow_full_cyr$tgt))
+icow_full_cyr$ccode2 = rowMaxs(cbind(icow_full_cyr$chal, icow_full_cyr$tgt))
+icow_full_cyr$tclaim = 1
+icow_full_cyr$salint1 = with(icow_full_cyr, ifelse(chal == ccode1, max(salintc), max(salintt)))
+icow_full_cyr$salint2 = with(icow_full_cyr, ifelse(chal == ccode2, max(salintc), max(salintt)))
+
+### ICOW country year summary
+icow_country1 = icow_full_cyr %>% group_by(ccode1, year) %>% summarize(
+  nterrclaim1 = sum(tclaim),
+  bterrclaim1 = 1,
+  # mainland1 = max(tcoffshore),
+  # salmax1 = max(icowsal),
+  # saltanmax1 = max(saltan),
+  # salintmax1 = max(salint1)
+) %>% rename(ccode = ccode1)
+
+icow_country2 = icow_full_cyr %>% group_by(ccode2, year) %>% summarize(
+  nterrclaim2 = sum(tclaim),
+  bterrclaim2 = 1,
+  # mainland2 = max(tcoffshore),
+  # salmax2 = max(icowsal),
+  # saltanmax2 = max(saltan),
+  # salintmax2 = max(salint2)
+) %>% rename(ccode = ccode2)
+
+icow_countrya <- full_join(icow_country1, icow_country2) %>% mutate (
+  nterrclaim = nterrclaim1 + nterrclaim2,
+  bterrclaim = bterrclaim1 + bterrclaim2,
+  # mainland = mainland1 + mainland2,
+  # salmax = salmax1 + salmax2,
+  # saltanmax = saltanmax1 + saltanmax2,
+  # # salintmax = salintmax1 + salintmax2
+)
+
+### Gibler MID data
+dmid <- read_csv("./data/gml-ndy-disputes-2.0.csv")
+dmid$dyad <- undirdyads(dmid, ccode1, ccode2)
+dmid$dmidyr = 1
+dmiddy <- dmid %>% group_by(dyad, year) %>% summarize(
+  ndymid = sum(dmidyr, na.rm = T),
+  bdymid = 1
+)
+cmid1 <- dmid %>% group_by(ccode1, year) %>% summarize(
+  nmidcyr1 = sum(dmidyr, na.rm = T),
+  bmidcyr1 = 1
+) %>% rename(ccode = ccode1) %>% select(ccode, year, nmidcyr1, bmidcyr1)
+
+cmid2 <- dmid %>% group_by(ccode2, year) %>% summarize(
+  nmidcyr2 = sum(dmidyr, na.rm = T),
+  bmidcyr2 = 1
+) %>% rename(ccode = ccode2) %>% select(ccode, year, nmidcyr2, bmidcyr2)
+
+cmida <- full_join(cmid1, cmid2) %>% mutate(
+  nmidcyr = nmidcyr1 + nmidcyr2,
+  bmidcyr = bmidcyr1 + bmidcyr2
+) %>% select(ccode, year, nmidcyr, bmidcyr)
+
+### ICOW dyad year data
+icow_full_dyr = icow_full_cyr %>% group_by(dyad, year) %>% summarize(
+  dyterrclaim = 1,
+  mainland = max(tcoffshore),
+  claimyrsal = max(icowsal),
+  claimyrtan = max(saltan),
+  claimyrint = max(salint),
+  claimyrintc = max(salintc),
+  claimyrintt = max(salintt)
+)
+
+### Merge Monadic Data
+dmon = full_join(madd, dcap)
+dmon = full_join(dmon, select(dpol, ccode, year, polity2))
+dmon = full_join(dmon, select(dw, ccode, year, W, S))
+dmon = full_join(dmon, chisols)
+dmon = full_join(dmon, dtradea)
+dmon = full_join(dmon, cmida)
+dmon = full_join(dmon, icow_countrya)
+
+dmon$nmidcyr <- ifelse(is.na(dmon$nmidcyr), 0, dmon$nmidcyr)
+dmon$bmidcyr <- ifelse(is.na(dmon$bmidcyr), 0, dmon$bmidcyr)
+dmon$nterrclaim <- ifelse(is.na(dmon$nterrclaim), 0, dmon$nterrclaim)
+dmon$bterrclaim <- ifelse(is.na(dmon$bterrclaim), 0, dmon$bterrclaim)
+# dmon$mainland <- ifelse(is.na(dmon$mainland), 0, dmon$mainland)
+# dmon$salmax <- ifelse(is.na(dmon$salmax), 0, dmon$salmax)
+# dmon$saltanmax <- ifelse(is.na(dmon$saltanmax), 0, dmon$saltanmax)
+# dmon$salintmax <- ifelse(is.na(dmon$salintmax), 0, )
+
+# fillmiss <- function(dat, var) {
+#   dat[, var] <- ifelse(is.na(dat[, var]), 0, dat[, var])
+# }
+# fillmiss(dat, "cinc1")
+
+# Check for duplicates
+# sum(duplicated(dmon[, c("ccode", "year")]))
+# dmon[duplicated(dmon[, c("ccode", "year")]),]
+
+dmon$lngdp <- log(dmon$gdp)
+names(dmon$rgdpnapc) <- "gdpcap"
+dmon <- rename(dmon, gdpcap = rgdpnapc)
+dmon$lngdpcap <- log(dmon$gdpcap)
+dmon$lnpop <- log(dmon$pop)
+
+### Monadic Lags
+dmon <- dmon %>% arrange(ccode, year) %>% mutate(
+  lgdpcap = lag(gdpcap),
+  lpol = lag(polity2), 
+  lpop = lag(pop),
+  lgdp = lag(gdp), 
+  lcinc = lag(cinc),
+  lagW = lag(W),
+  lagS = lag(S),
+  laglngdp = lag(lngdp),
+  laglngdpcap = lag(lngdpcap),
+  laglnpop = lag(lnpop),
+  lnmidcyr  = lag(nmidcyr),
+  lbmidcyyr = lag(bmidcyr),
+  laglnagg = lag(lnagg),
+  lbterrclaim = lag(bterrclaim),
+  lnterrclaim = lag(nterrclaim)
+)
+
+### Predict total monadic trade using monadic variables
+monmod <- lmer(lnagg ~ lnterrclaim + laglngdp + laglngdpcap + lnmidcyr + lcinc + lpol + (1 | ccode), data = dmon); summary(monmod);r.squaredGLMM(monmod) #  .662/.93
+# tm3 <- lmer(lnagg2 ~ nterrclaim2 + laglngdp2 + laglngdpcap2 + lmidcyr1 + lcinc1 + polity21 + (1 | ccode2), data = dat); summary(tm3);r.squaredGLMM(tm3) #  .662/.93
+# exp(-.129) * 1000000
+# exp(-.107) * 1000000
+monsim <- dmon
+monsim$lnterrclaim <- 0
+#dsim1 <- dat
+#dsim1$ldyterrclaim <- 1
+dmon$monsim <- predict(monmod, monsim, allow.new.levels = T)
+#dat$trsim1 <- predict(tm1, dsim1, allow.new.levels = T)
+#dat$ugtpred <- trsim0 - trsim1
+dmon$totugt  <- dmon$monsim - dmon$lnagg
+# dmon$ugtdep1  <- dmon$ugt/dmon$gdp1 * 1000000
+# dmon$ugtdep2 <- dmon$ugt/dmon$gdp2 * 1000000
+# dmon$ugtdept <- dmon$ugt/dmon$gdpt * 1000000
+# dmon$ugtdivtr1 <- dmon$ugt/dmon$sflow2
+# dmon$ugtdivtr2 <- dmon$ugt/dmon$sflow1
+
+
+# Create separate versions of monadic data
+dmon1 = dmon %>% select(-"version") 
+#dmon1 = full_join(dmon1, rename(icow_country1, ccode = ccode1))
+#dmon1 = dmon1 %>% mutate(
+  # lnterrclaim1 = lag(nterrclaim),
+  # lterrclaim1 = lag(terrclaim),
+  # lmainland1 = lag(mainland),
+  # lsalmax1 = lag(salmax),
+  # ltanmax1 = lag(tanmax),
+  # lintmax1 = lag(intmax),
+#)
+dmon1 = dmon1 %>% setNames(paste0(names(.), "1")) %>% rename(year = year1)
+
+dmon2 = dmon %>% select(-"version")
+#dmon2 = full_join(dmon2, rename(icow_country2, ccode = ccode2))
+#dmon2 = dmon2 %>% mutate(
+  # lnterrclaim2 = lag(nterrclaim),
+  # lterrclaim2 = lag(terrclaim),
+  # lmainland2 = lag(mainland),
+  # lsalmax2 = lag(salmax),
+  # ltanmax2 = lag(tanmax),
+  # lintmax2 = lag(intmax),
+  #lagg2 = log(agg2),
+  #laglnagg2 = lag(lnagg)
+#)
+dmon2 = dmon2 %>% setNames(paste0(names(.), "2")) %>% rename(year = year2)
+
+########### DYADIC DATA ##########
+
+### Distance and contiguity data
 ddist  <- read_csv("./data/COW_Distance_NewGene_Export.csv")
 ddist$dyad <- undirdyads(ddist, ccode1, ccode2)
-
-### Contiguity Data
 dcont  <- read_csv("./data/COW_Contiguity_NewGeneExport.csv")
 dcont$dyad <- undirdyads(dcont, ccode1, ccode2)
 dcont <- dcont[dcont$ccode1 < dcont$ccode2, ]
@@ -86,27 +249,12 @@ dcont <- dcont[dcont$ccode1 < dcont$ccode2, ]
 # dsub <- dcont[order("dyad", "year"), ]
 # dsub <- arrange(dcont, dyad, year)
 
-### ICOW global territory claim year data
-icow_full_cyr  = read_csv("./data/ICOWprovyr101.csv")
-# Collapse to dyad year
-icow_full_dyr = icow_full_cyr %>% group_by(dyad, year) %>% summarize(
-  dyterrclaim = 1,
-  mainland = min(tcoffshore),
-  cyricowsal = max(icowsal)
-)
 
 ### Alliance data
 dally <- read_csv("./data/alliance_v4.1_by_dyad_yearly.csv")
 dally$dyad <- undirdyads(dally, ccode1, ccode2)
 dally <- dally %>% group_by(dyad, year) %>% summarize(
-  defense = sum(defense)
-)
-
-### Gibler MID data
-dmid <- read_csv("./data/gml-ndy-disputes-2.0.csv")
-dmid$dyad <- undirdyads(dmid, ccode1, ccode2)
-dmiddy <- dmid %>% group_by(dyad, year) %>% summarize(
-  mid = 1
+  defense = sum(defense, na.rm = T)
 )
 
 ### Merge dyadic data
@@ -125,12 +273,6 @@ dat <- left_join(dat, dmon2)
 dat$trade = dat$flow1 + dat$flow2
 dat$lntrade = ifelse(dat$trade == 0, 0, log(dat$trade))
 
-# Aggregate trade with all countries
-dat <- ungroup(dat %>% group_by(dyad, year) %>% mutate(
-  sflow1 = sum(flow2), 
-  sflow2 = sum(flow1),
-))
-
 # Mean dyadic trade
 dat <- ungroup(dat %>% group_by(dyad) %>% mutate(
   mflow1 = mean(flow1),
@@ -138,19 +280,23 @@ dat <- ungroup(dat %>% group_by(dyad) %>% mutate(
   mtrade = mean(trade, na.rm = T),
   mlntrade = mean(lntrade, na.rm = T),
 ))
+
+# Deviations from mean dyadic trade
 dat$trdev = dat$trade - dat$mtrade
 dat$lntrdev = dat$lntrade - dat$mlntrade
 
-# Trade Dependence
-dat$tdeptot1 = dat$sflow2/dat$gdp1
-dat$tdeptot2 = dat$sflow1/dat$gdp2
+# Dependence on global trade
+dat$tdeptot1 = dat$aggtot1/dat$gdp1
+dat$tdeptot2 = dat$aggtot2/dat$gdp2
 dat$tdeptotmax = rowMaxs(cbind(dat$tdeptot1, dat$tdeptot2))
-dat$tdepdy1 = dat$flow2/dat$gdp1 #tdepdy1 is 1's dependence on 2 (exports/gdpcap)
-dat$tdepdy2 = dat$flow1/dat$gdp2 # higher values indicate that 2 is more dependent on trade
-dat$tdepdymax = rowMaxs(cbind(dat$tdepdy1, dat$tdepdy2))
 dat$lntdeptot1 = ifelse(dat$tdeptot1 == 0, 0, log(dat$tdeptot1))
 dat$lntdeptot2 = ifelse(dat$tdeptot2 == 0, 0, log(dat$tdeptot2))
 dat$lntdeptotmax = ifelse(dat$tdeptotmax == 0, 0, log(dat$tdeptotmax))
+
+# Dependence on dyadic trade
+dat$tdepdy1 = dat$trade/dat$gdp1 #tdepdy1 is 1's dependence on 2 (exports/gdpcap)
+dat$tdepdy2 = dat$trade/dat$gdp2 # higher values indicate that 2 is more dependent on trade
+dat$tdepdymax = rowMaxs(cbind(dat$tdepdy1, dat$tdepdy2))
 dat$lntdepdy1 = ifelse(dat$tdepdy1 == 0, 0, log(dat$tdepdy1))
 dat$lntdepdy2 = ifelse(dat$tdepdy2 == 0, 0, log(dat$tdepdy2))
 dat$lntdepdymax = ifelse(dat$tdepdymax == 0, 0, log(dat$tdepdymax))
@@ -165,11 +311,12 @@ dat$lngdpcapt = log(dat$gdpcapt)
 dat$lnccdist <- ifelse(dat$ccdistance == 0, 0, log(dat$ccdistance))
 dat$conttype[is.na(dat$conttype)] <- 6
 dat$contdir <- ifelse(dat$conttype == 1, 1, 0)
-dat$dyterrclaim <- ifelse(!is.na(dat$dyterrclaim), 1, 0)
-dat$cyricowsal <- ifelse(!is.na(dat$cyricowsal), dat$cyricowsal, 0)
+dat$dyterrclaim <- ifelse(is.na(dat$dyterrclaim), 0, 1)
+#dat$cyricowsal <- ifelse(!is.na(dat$cyrsal), dat$cyrsal, 0)
 dat$mainland <- ifelse(!is.na(dat$mainland), 1, 0)
 dat$defense <- ifelse(is.na(dat$defense), 0, dat$defense)
-dat$mid <- ifelse(is.na(dat$mid), 0, 1)
+dat$bdymid <- ifelse(is.na(dat$bdymid), 0, 1)
+dat$ndymid <- ifelse(is.na(dat$ndymid), 0, 1)
 dat$caprat <- rowMaxs(cbind(dat$cinc1, dat$cinc2)) / (dat$cinc1 + dat$cinc2)
 dat$demdy <- ifelse(dat$polity21 > 5 & dat$polity22 > 5, 1, 0)
 
@@ -194,7 +341,8 @@ dat <- dat %>% arrange(dyad, year) %>% mutate(
   laglntdeptot2 = lag(lntdeptot2),
   laglntdepdy1 = lag(lntdepdy1),
   laglntdepdy2 = lag(lntdepdy2),
-  lmid = lag(mid),
+  lbdymid = lag(bdymid),
+  lndymid = lag(ndymid),
   ldyterrclaim = lag(dyterrclaim),
   ldemdy = lag(demdy),
   #ldefense = lag(sdally)
@@ -212,7 +360,8 @@ dat <- dat %>% arrange(dyad, year) %>% mutate(
 # dat$open <- dat$trade / dat$gdpcapt
   # Lagging ldyterrclaim, defense, and caprat leads to a ton of dropped observations
 
-tm1 <- lmer(lntrade ~ ldyterrclaim + laglngdp1 + laglngdp2 + laglngdpcap1 + laglngdpcap2 + contdir + ldefense + mid + lcaprat + polity21 * polity22 + (1 | dyad), data = dat); summary(tm1);r.squaredGLMM(tm1) #  .662/.93
+tm1 <- lmer(lntrade ~ ldyterrclaim + laglngdp1 + laglngdp2 + laglngdpcap1 + laglngdpcap2 + contdir + ldefense + lcaprat + lpol1 * lpol2 + (1 | dyad) + (1 | year), data = dat); summary(tm1);r.squaredGLMM(tm1) #  .662/.93 lndymid
+
 
 
 # Diagnostics
@@ -231,23 +380,23 @@ dsim0$ldyterrclaim <- 0
 dat$trsim0 <- predict(tm1, dsim0, allow.new.levels = T)
 #dat$trsim1 <- predict(tm1, dsim1, allow.new.levels = T)
 #dat$ugtpred <- trsim0 - trsim1
-dat$ugt  <- dat$trsim0 - dat$lntrade #doesn't look great
-dat$ugtdep1  <- dat$ugt/dat$gdp1 * 100000
-dat$ugtdep2 <- dat$ugt/dat$gdp2 * 100000
-dat$ugtdept <- dat$ugt/dat$gdpt * 100000
-dat$ugtdivtr1 <- dat$ugt/dat$sflow2
-dat$ugtdivtr2 <- dat$ugt/dat$sflow1
+dat$dyugt  <- dat$trsim0 - dat$lntrade #doesn't look great
+# dat$ugtdep1  <- dat$ugt/dat$gdp1 * 100000
+# dat$ugtdep2 <- dat$ugt/dat$gdp2 * 100000
+# dat$ugtdept <- dat$ugt/dat$gdpt * 100000
+# dat$ugtdivtr1 <- dat$ugt/dat$sflow2
+# dat$ugtdivtr2 <- dat$ugt/dat$sflow1
 
 # sum(!is.na(dat[dat$ldyterrclaim == 1, "ugt"]))
 # sum(!is.na(icow_cyr_part_out[icow_cyr_part_out$ldyterrclaim == 1, "ugt"]))
 
 dat <- dat %>% arrange(dyad, year) %>% mutate(
-  lugt = lag(ugt),
-  lugtdep1 = lag(ugtdep1),
-  lugtdep2 = lag(ugtdep2),
-  lugtdept = lag(ugtdept),
-  lugtdivtr1 = lag(ugtdivtr1),
-  lugtdivtr2 = lag(ugtdivtr2)
+  lugt = lag(dyugt)
+  # lugtdep1 = lag(ugtdep1),
+  # lugtdep2 = lag(ugtdep2),
+  # lugtdept = lag(ugtdept),
+  # lugtdivtr1 = lag(ugtdivtr1),
+  # lugtdivtr2 = lag(ugtdivtr2)
 )
 # dat$ugddeppred <- dat$ugtpred/dat$gdpcomb  this doesn't work because trsim0 is .3 greater than trsim1 for all observations (duh, linear model)
 
@@ -260,8 +409,8 @@ icow_set <- left_join(icow_set, dat)
 icow_set$agreeiss <- ifelse(is.na(icow_set$agreeiss), 0, icow_set$agreeiss)
 
 icow_set_col <- icow_set %>% group_by(dyad, year) %>% summarize (
-  sagree = sum(agree),
-  sagreeiss = sum(agreeiss)
+  sagree = sum(agree, na.rm = T),
+  sagreeiss = sum(agreeiss, na.rm = T)
 )
 icow_set_col$bagree <- ifelse(icow_set_col$sagree > 0, 1, 0)
 icow_set_col$bagreeiss <- ifelse(icow_set_col$sagreeiss > 0, 1, 0)
@@ -270,16 +419,16 @@ icow_set_col$bagreeiss <- ifelse(icow_set_col$sagreeiss > 0, 1, 0)
 icow_part_cyr  <- read_dta("./data/ICOWdyadyr.dta")
 icow_part_cyr  <- filter(icow_part_cyr, terriss == 1)
 icow_part_dyr <- icow_part_cyr %>% group_by(dyad, year) %>% summarize(
-  npeace = sum(attemptsp),
+  npeace = sum(attemptsp, na.rm = T),
   bpeace = max(attanyp),
-  nmids = sum(nmidiss),
+  nmids = sum(nmidiss, na.rm = T),
   bmids = max(midissyr),
   totsalmax = max(icowsal),
   chalsalmax = max(salchal),
   tgtsalmax = max(saltgt),
-  recnowt = sum(recnowt),
-  recyeswt = sum(recyeswt),
-  recmidwt = sum(recmidwt)
+  recnowt = sum(recnowt, na.rm = T),
+  recyeswt = sum(recyeswt, na.rm = T),
+  recmidwt = sum(recmidwt, na.rm = T)
 )
 
 #icow_part_cyr_out <- full_join(dat, icow_part_cyr)
