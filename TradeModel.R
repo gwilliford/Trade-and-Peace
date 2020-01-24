@@ -7,27 +7,24 @@ library(dplyr)
 library(matrixStats)
 library(lme4)
 library(countrycode)
+library(MuMIn)
 
 ### Import Monadic Data
 # dgdp = read_dta("gdpcapfinal2017_01_23.dta")
 # dgdp = mutate(dgdp, ccode = as.numeric(ccode), year = as.numeric(year), gdpcap = as.numeric(gdpcap), lgdpcap, as.numeric(lgdpcap))
 # dmad = see other file
 
-mad <- read_excel("mpd2018.xlsx", sheet = "Full data", n_max = 19357)
-mad$ccode <- as.numeric(with(mad, countrycode(countrycode, 'iso3c', 'cown')))
-mad$gdp <- mad$rgdpnapc/mad$pop
-mad <- filter(mad, !is.na(ccode))
 
-dcap = read_dta("NMC_5_0.dta")
-dpol = read_excel("p4v2016.xls")
-dw   = read_dta("bdm2s2_nation_year_data_may2002.dta")
+dcap = read_dta("./data/NMC_5_0.dta")
+dpol = read_excel("./data/p4v2016.xls")
+dw   = read_dta("./data/bdm2s2_nation_year_data_may2002.dta")
 
 # Merge Monadic Data
 #dmon = select(gdp, ccode, year, gdpcap, lgdpcap)
-dmon = full_join(mad, dcap)
+dmon = full_join(madd, dcap)
 dmon = full_join(dmon, select(dpol, ccode, year, polity2))
 dmon = full_join(dmon, select(dw, ccode, year, W, S))
-dmon = full_join(dmon, mad)
+dmon = full_join(dmon, madd)
 
 # Check for duplicates
 # sum(duplicated(dmon[, c("ccode", "year")]))
@@ -69,18 +66,18 @@ undirdyads <- function(df, ccode1, ccode2) {
 }
 
 ### Trade Data
-dtrade <- read_csv("Dyadic_COW_4.0.csv")
+dtrade <- read_csv("./data/Dyadic_COW_4.0.csv")
 dtrade$dyad = undirdyads(dtrade, ccode1, ccode2)
 dtrade$flow1 <- ifelse(dtrade$flow1 < 0, NA, dtrade$flow1)
 dtrade$flow2 <- ifelse(dtrade$flow2 < 0, NA, dtrade$flow2)
 dtrade$smoothtotrade <- ifelse(dtrade$smoothtotrade < 0, NA, dtrade$smoothtotrade)
 
 ### Distance data
-ddist  <- read_csv("COW_Distance_NewGene_Export.csv")
+ddist  <- read_csv("./data/COW_Distance_NewGene_Export.csv")
 ddist$dyad <- undirdyads(ddist, ccode1, ccode2)
 
 ### Contiguity Data
-dcont  <- read_csv("COW_Contiguity_NewGeneExport.csv")
+dcont  <- read_csv("./data/COW_Contiguity_NewGeneExport.csv")
 dcont$dyad <- undirdyads(dcont, ccode1, ccode2)
 dcont <- dcont[dcont$ccode1 < dcont$ccode2, ]
 # dcont$dup <- duplicated(dcont[, c("dyad", "year")])
@@ -90,21 +87,23 @@ dcont <- dcont[dcont$ccode1 < dcont$ccode2, ]
 # dsub <- arrange(dcont, dyad, year)
 
 ### ICOW global territory claim year data
-icow_full_cyr  = read_csv("ICOWprovyr101.csv")
+icow_full_cyr  = read_csv("./data/ICOWprovyr101.csv")
 # Collapse to dyad year
 icow_full_dyr = icow_full_cyr %>% group_by(dyad, year) %>% summarize(
-  dyterrclaim = 1
+  dyterrclaim = 1,
+  mainland = min(tcoffshore),
+  cyricowsal = max(icowsal)
 )
 
 ### Alliance data
-dally <- read_csv("alliance_v4.1_by_dyad_yearly.csv")
+dally <- read_csv("./data/alliance_v4.1_by_dyad_yearly.csv")
 dally$dyad <- undirdyads(dally, ccode1, ccode2)
 dally <- dally %>% group_by(dyad, year) %>% summarize(
   defense = sum(defense)
 )
 
 ### Gibler MID data
-dmid <- read_csv("gml-ndy-disputes-2.0.csv")
+dmid <- read_csv("./data/gml-ndy-disputes-2.0.csv")
 dmid$dyad <- undirdyads(dmid, ccode1, ccode2)
 dmiddy <- dmid %>% group_by(dyad, year) %>% summarize(
   mid = 1
@@ -167,7 +166,8 @@ dat$lnccdist <- ifelse(dat$ccdistance == 0, 0, log(dat$ccdistance))
 dat$conttype[is.na(dat$conttype)] <- 6
 dat$contdir <- ifelse(dat$conttype == 1, 1, 0)
 dat$dyterrclaim <- ifelse(!is.na(dat$dyterrclaim), 1, 0)
-dat$lnccdist <- ifelse(dat$ccdistance == 0, 0, log(dat$ccdistance))
+dat$cyricowsal <- ifelse(!is.na(dat$cyricowsal), dat$cyricowsal, 0)
+dat$mainland <- ifelse(!is.na(dat$mainland), 1, 0)
 dat$defense <- ifelse(is.na(dat$defense), 0, dat$defense)
 dat$mid <- ifelse(is.na(dat$mid), 0, 1)
 dat$caprat <- rowMaxs(cbind(dat$cinc1, dat$cinc2)) / (dat$cinc1 + dat$cinc2)
@@ -212,8 +212,8 @@ dat <- dat %>% arrange(dyad, year) %>% mutate(
 # dat$open <- dat$trade / dat$gdpcapt
   # Lagging ldyterrclaim, defense, and caprat leads to a ton of dropped observations
 
-tm1 <- lmer(lntrade ~ ldyterrclaim + lngdp1 + lngdp2 + lnpop1 + lnpop2 + contdir + ldefense + mid + lcaprat + polity21 * polity22 + (1 | dyad), data = dat); summary(tm1) #  .662/.93
-# r.squaredGLMM(tm1)
+tm1 <- lmer(lntrade ~ ldyterrclaim + laglngdp1 + laglngdp2 + laglngdpcap1 + laglngdpcap2 + contdir + ldefense + mid + lcaprat + polity21 * polity22 + (1 | dyad), data = dat); summary(tm1);r.squaredGLMM(tm1) #  .662/.93
+
 
 # Diagnostics
 # with(dat, cor(cbind(lntrade, ldyterrclaim, lngdp1, lngdp2, lnpop1, lnpop2, contdir, ldefense, mid, lcaprat, polity21, polity22), use = "complete.obs"))
@@ -252,7 +252,7 @@ dat <- dat %>% arrange(dyad, year) %>% mutate(
 # dat$ugddeppred <- dat$ugtpred/dat$gdpcomb  this doesn't work because trsim0 is .3 greater than trsim1 for all observations (duh, linear model)
 
 ### ICOW settlement data
-icow_set <- read_dta("ICOWsettle.dta")
+icow_set <- read_dta("./data/ICOWsettle.dta")
 icow_set <- icow_set %>% filter(midiss == 0 & terriss == 1) # drop mids and non-territorial claims
 
 icow_set <- select(icow_set, -mid)
@@ -267,7 +267,7 @@ icow_set_col$bagree <- ifelse(icow_set_col$sagree > 0, 1, 0)
 icow_set_col$bagreeiss <- ifelse(icow_set_col$sagreeiss > 0, 1, 0)
 
 ### ICOW Partial Data
-icow_part_cyr  <- read_dta("ICOWdyadyr.dta")
+icow_part_cyr  <- read_dta("./data/ICOWdyadyr.dta")
 icow_part_cyr  <- filter(icow_part_cyr, terriss == 1)
 icow_part_dyr <- icow_part_cyr %>% group_by(dyad, year) %>% summarize(
   npeace = sum(attemptsp),
