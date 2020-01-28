@@ -75,3 +75,37 @@ tm2 <- lmer(lntrade ~ dyterrclaim + lngdp1 + lngdp2 + lngdpcap1 + lngdpcap2 + co
 
 # Unrealized trade
 # write_csv(dat, "TradeOut.csv")
+
+
+# plot(dat$lntrade ~ dat$year)
+# plot(predict(tm1))
+# 
+# plot(a$lntrade ~ c(1870:2014), col = "red")
+# lines(y = predict(z), x = c(1870:2014))
+# lines(y = predict(z2), x = c(1870:2014))
+# lines(y = predict(z3), x = c(1870:2014))
+
+
+# Explore
+a <- dtrade %>% group_by(year) %>% summarize(
+  tflow1 = sum(flow1, na.rm = T),
+  tflow2 = sum(flow2, na.rm = T),
+  ttrade = tflow1 + tflow2, 
+  lntrade = log(ttrade)
+)
+z <- lm(lntrade ~ year + I(year^2), data = a)
+z2 <- lm(lntrade ~ year + I(year^2) + I(year^3), data = a)
+z3 <- lm(lntrade ~ year + I(year^2) + I(year^3) + I(year^4), data = a)
+plot(a$lntrade ~ c(1870:2014), col = "red")
+lines(y = predict(z), x = c(1870:2014))
+lines(y = predict(z2), x = c(1870:2014))
+lines(y = predict(z3), x = c(1870:2014))
+
+
+# beta <- predict(alpha)
+charlie <- data.frame(year = 1817:2014, year2 = (1817:2014)^2)
+mac <- predict(alpha, charlie)
+plot(y = mac, x = a$year)
+# sum(dtrade1$sflow1 if ccode == 200)
+# sum(dtrade2$sflow2 if ccode == 200)
+
