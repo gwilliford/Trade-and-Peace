@@ -6,13 +6,10 @@ library(haven)
 library(dplyr)
 library(matrixStats)
 library(lme4)
-library(countrycode)
 library(MuMIn)
+library(optimx)
 
 ### Import Monadic Data
-# dgdp = read_dta("gdpcapfinal2017_01_23.dta")
-# dgdp = mutate(dgdp, ccode = as.numeric(ccode), year = as.numeric(year), gdpcap = as.numeric(gdpcap), lgdpcap, as.numeric(lgdpcap))
-# dmad = see other file
 madd = read_csv("./data/madd.csv")
 dcap = read_dta("./data/NMC_5_0.dta")
 dpol = read_excel("./data/p4v2016.xls")
@@ -38,8 +35,6 @@ dtrade$flow1 <- ifelse(dtrade$flow1 < 0, NA, dtrade$flow1)
 dtrade$flow2 <- ifelse(dtrade$flow2 < 0, NA, dtrade$flow2)
 dtrade$smoothtotrade <- ifelse(dtrade$smoothtotrade < 0, NA, dtrade$smoothtotrade)
 
-# sum(dtrade1$sflow1 if ccode == 200)
-# sum(dtrade2$sflow2 if ccode == 200)
 
 ### Total global trade for each country-year
 # Get sum of imports, exports, and both when country i is ccode1
@@ -61,10 +56,6 @@ dtradea <- full_join(dtrade1, dtrade2) %>% mutate (
   aggtot = agg1 + agg2  
 ) %>% select(ccode, year, imptot, exptot, aggtot)
 dtradea$lnagg <- ifelse(dtradea$aggtot == 0, 0, log(dtradea$aggtot))
-
-# aggregate ccode1 gets all exports
-# aggregate ccode2 gets all imports
-#tradem <- group_split(dtrade, ccode1, ccode2,keep = TRUE)
 
 ### ICOW global territory claim year data
 icow_full_cyr = read_csv("./data/ICOWprovyr101.csv")
@@ -209,31 +200,8 @@ dmon$totugt  <- dmon$monsim - dmon$lnagg
 
 
 # Create separate versions of monadic data
-dmon1 = dmon %>% select(-"version") 
-#dmon1 = full_join(dmon1, rename(icow_country1, ccode = ccode1))
-#dmon1 = dmon1 %>% mutate(
-  # lnterrclaim1 = lag(nterrclaim),
-  # lterrclaim1 = lag(terrclaim),
-  # lmainland1 = lag(mainland),
-  # lsalmax1 = lag(salmax),
-  # ltanmax1 = lag(tanmax),
-  # lintmax1 = lag(intmax),
-#)
-dmon1 = dmon1 %>% setNames(paste0(names(.), "1")) %>% rename(year = year1)
-
-dmon2 = dmon %>% select(-"version")
-#dmon2 = full_join(dmon2, rename(icow_country2, ccode = ccode2))
-#dmon2 = dmon2 %>% mutate(
-  # lnterrclaim2 = lag(nterrclaim),
-  # lterrclaim2 = lag(terrclaim),
-  # lmainland2 = lag(mainland),
-  # lsalmax2 = lag(salmax),
-  # ltanmax2 = lag(tanmax),
-  # lintmax2 = lag(intmax),
-  #lagg2 = log(agg2),
-  #laglnagg2 = lag(lnagg)
-#)
-dmon2 = dmon2 %>% setNames(paste0(names(.), "2")) %>% rename(year = year2)
+dmon1 = dmon %>% select(-"version") %>% setNames(paste0(names(.), "1")) %>% rename(year = year1)
+dmon2 = dmon %>% select(-"version") %>% setNames(paste0(names(.), "2")) %>% rename(year = year2)
 
 ########### DYADIC DATA ##########
 
@@ -348,30 +316,11 @@ dat <- dat %>% arrange(dyad, year) %>% mutate(
   #ldefense = lag(sdally)
   ldefense = lag(defense)
 )
-# dat$ldemdy2 <- ifelse(dat$lpol1 > 5 & dat$lpol2 > 5, 1, 0)
-# summary(dat$ldemdy)
-# summary(dat$ldemdy2)
-# dat$lgdpcapt2 <- dat$lgdpcap1 + dat$lgdpcap2
-# summary(dat$lgdpcapt)
-# summary(dat$lgdpcapt2)
-# summary(dat$lgdpcap1a)
-# summary(dat$lgdpcap1)
 
-# dat$open <- dat$trade / dat$gdpcapt
-  # Lagging ldyterrclaim, defense, and caprat leads to a ton of dropped observations
-
-tm1 <- lmer(lntrade ~ ldyterrclaim + laglngdp1 + laglngdp2 + laglngdpcap1 + laglngdpcap2 + contdir + ldefense + lcaprat + lpol1 * lpol2 + (1 | dyad) + (1 | year), data = dat); summary(tm1);r.squaredGLMM(tm1) #  .662/.93 lndymid
-
-
-
-# Diagnostics
-# with(dat, cor(cbind(lntrade, ldyterrclaim, lngdp1, lngdp2, lnpop1, lnpop2, contdir, ldefense, mid, lcaprat, polity21, polity22), use = "complete.obs"))
-# with(dat, summary(cbind(lntrade, ldyterrclaim, lngdp1, lngdp2, lnpop1, lnpop2, contdir, ldefense, mid, lcaprat, polity21, polity22), use = "complete.obs"))
-### SOrting error - fix dplyr by ungrouping grouped data - woof
-
-# ldefense - but defense has a lot
-# lcaprat - but caprat has a lot
-# mid == 1?
+dat$y2 = (dat$year)^2 / 1000
+tm1 <- lmer(lntrade ~ ldyterrclaim + laglngdp1 + laglngdp2 + laglngdpcap1 + laglngdpcap2 + contdir + ldefense + lcaprat + lpol1 * lpol2 + year + y2 + (1 | dyad) + (1 | year), data = dat,           control= lmerControl(optimizer = "optimx", calc.derivs = FALSE, optCtrl = list(method = "nlminb",starttests = FALSE, kkt = FALSE)))
+; summary(tm1);r.squaredGLMM(tm1) #  .662/.93 lndymid
+tm1 <- lm(lntrade ~ ldyterrclaim + laglngdp1 + laglngdp2 + laglngdpcap1 + laglngdpcap2 + contdir + ldefense + lcaprat + lpol1 * lpol2 + year + y2, data = dat); summary(tm1);r.squaredGLMM(tm1) #  .662/.93 lndymid
 
 dsim0 <- dat
 dsim0$ldyterrclaim <- 0
@@ -398,127 +347,4 @@ dat <- dat %>% arrange(dyad, year) %>% mutate(
   # lugtdivtr1 = lag(ugtdivtr1),
   # lugtdivtr2 = lag(ugtdivtr2)
 )
-# dat$ugddeppred <- dat$ugtpred/dat$gdpcomb  this doesn't work because trsim0 is .3 greater than trsim1 for all observations (duh, linear model)
 
-### ICOW settlement data
-icow_set <- read_dta("./data/ICOWsettle.dta")
-icow_set <- icow_set %>% filter(midiss == 0 & terriss == 1) # drop mids and non-territorial claims
-
-icow_set <- select(icow_set, -mid)
-icow_set <- left_join(icow_set, dat)
-icow_set$agreeiss <- ifelse(is.na(icow_set$agreeiss), 0, icow_set$agreeiss)
-
-icow_set_col <- icow_set %>% group_by(dyad, year) %>% summarize (
-  sagree = sum(agree, na.rm = T),
-  sagreeiss = sum(agreeiss, na.rm = T)
-)
-icow_set_col$bagree <- ifelse(icow_set_col$sagree > 0, 1, 0)
-icow_set_col$bagreeiss <- ifelse(icow_set_col$sagreeiss > 0, 1, 0)
-
-### ICOW Partial Data
-icow_part_cyr  <- read_dta("./data/ICOWdyadyr.dta")
-icow_part_cyr  <- filter(icow_part_cyr, terriss == 1)
-icow_part_dyr <- icow_part_cyr %>% group_by(dyad, year) %>% summarize(
-  npeace = sum(attemptsp, na.rm = T),
-  bpeace = max(attanyp),
-  nmids = sum(nmidiss, na.rm = T),
-  bmids = max(midissyr),
-  totsalmax = max(icowsal),
-  chalsalmax = max(salchal),
-  tgtsalmax = max(saltgt),
-  recnowt = sum(recnowt, na.rm = T),
-  recyeswt = sum(recyeswt, na.rm = T),
-  recmidwt = sum(recmidwt, na.rm = T)
-)
-
-#icow_part_cyr_out <- full_join(dat, icow_part_cyr)
-icow_part_cyr <- left_join(icow_part_cyr, dat)
-icow_part_cyr <- left_join(icow_part_cyr, icow_set_col)
-icow_part_dyr <- left_join(icow_part_dyr, dat)
-icow_part_dyr <- left_join(icow_part_dyr, icow_set_col)
-# write_csv(icow_part_cyr_out, "icow_part_cyr.csv")r
-# write_csv(icow_part_dyr_out, "icow_part_dyr.csv")
-
-########## ICOW Settlement Data
-
-
-
-
-### Results of settlement attempt
-# # Agree - settlement attempt resulted in an agreement - only missings are ongoing at end of data
-# summary(icow_set[is.na(icow_set$agree), "year"])
-# 
-# # Agreeiss - settlement attempt result in a substantive agreement - recode NAs which could mean no agreement
-# summary(icow_set[is.na(icow_set$agreeiss), "year"])
-# icow_set$agreeiss <- ifelse(is.na(icow_set$agreeiss), 0, icow_set$agreeiss)
-  ### Consider recoding if ongoing at end
-
-# Effect 4 - what was the outcome of the settlement attempt (agree, ratify, comply, end)
-  # NA: sett attempt hasn't ended by end of current data
-  # 4: Agreement ended claim
-  # 3: Both states complied, but it didn't end the claim
-  # 2: Both states ratified, but at least one didn't comply
-  # 1: Both reached an agreement, but at least one didn't ratify
-  # 0: Attempt did not produce an agreement
-# Effect 3 is the same as above, except that nonratification and noncompliance are merged
-  # 3: Agreement ended claim
-  # 2: Both complied with agreement, but claim didn't end
-  # 1: Agreement reached, but at least one didn't ratify or comply
-  # 0: Attempt did not produce an agreement
-# Results of settlement attempt disaggregated by partial and total claim termination
-# Did cm attempt lead to an agreement that ended all or part of the claim?
-icow_set$ag_end_any  <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 1:2, 1, 0)
-# Did CM attempt lead to an agreement that ended part of the claim?
-icow_set$ag_end_part <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 1, 1, 0)
-# Did cm attempt lead to an agreement that ended all of the claim?
-icow_set$ag_end_full <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 2, 1, 0)
-
-# Alternate coding possibility - subset to agreements only and code outcomes
-
-### Claim resolution variables
-# What led to claim termination?
-# *** This variable is avaible in the claim level data for both the full and partial datasets
-# resolved: Type of claim resolution
-#   -9 (missing values): Ongoing (the claim is not resolved at the current end of the data set)
-#   1: Dropped by Challenger
-#   2: Renounced by Challenger
-#   3: (this value is no longer used)
-#   4: Bilateral
-#   5: Independence
-#   6: Actor Leaves System
-#   7: Military Conquest/Occupation
-#   8: Dropped by Target
-#   9: Renounced by Target
-#   10: Plebiscite
-#   11: Claim No Longer Relevant
-#   12: Binding Third Party Decision
-#   13: Non-binding Third Party Activity
-#   14: Peace conference
-
-
-## 
-# dmon$e <- dmon$gdpcap * dmon$tpop
-# f <- dmon[dmon$year == 2010, "e"]
-# f <- unlist(f)
-# summary(f)
-# median(f, na.rm = T) # median 111672727
-# # Mean   :  467396326  dollars --- so an increase of 5 billion is pretty damn significant
-
-#Neural Net
-# library(neuralnet)
-# nn = neuralnet(Placed~TKS+CSS,data=df, hidden=3,act.fct = "logistic",
-#              linear.output = FALSE)
-# library(neuralnet)
-# datnarm <- na.omit(dat)
-# nn = neuralnet(trade ~ gdpcomb + dyterrclaim + conttype, data = datnarm)
-
-
-# summary(icow_part_dyr$trsim0)
-# summary(icow_part_dyr$lntrade)
-# summary(icow_part_dyr$ugt) 
-# # exp (-4.768) = 0.0085 millions = 8500 foregone
-# # exp 8.106 = 3,314 millions foregone
-# exp(.202) # mean - 1.224 million foregone
-# exp(.076) # median - 1.079 million foregone
-# 
-# with(icow_part_dyr, summary(gdp1 + gdp2))
