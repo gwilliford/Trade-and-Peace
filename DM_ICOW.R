@@ -101,101 +101,39 @@ icow_part_cyr <- ungroup(icow_part_cyr[!is.na(icow_part_cyr$ccode1) & !is.na(ico
 # }
 # a <- chaltgt(dat)
 #if (icow_part_cyr$ccode1 == icow_part_cyr$chal) {
-  vl1 <- colnames(dplyr::select(icow_part_cyr, ends_with("1")))
+
+# Create challenger/target dataset
+vl1 <- colnames(dplyr::select(icow_part_cyr, ends_with("1")))
   vchal <- gsub('.{0,1}$', '', vl1)
   vchal <- paste0(vchal, '_chal')
-  vl2 <- colnames(dplyr::select(icow_part_cyr, ends_with("2")))
+  vl1 <- c(vl1, "rownum", "year")
+vl2 <- colnames(dplyr::select(icow_part_cyr, ends_with("2")))
   vtgt <- gsub('.{0,1}$', '', vl2)
   vtgt <- paste0(vtgt, '_tgt')
-  vnull <- c(gsub('.{0,1}$', '', vl1), "ccode1", "chal")
-  vl1 <- c(vl1, "rownum", "year")
   vl2 <- c(vl2, "rownum", "year")
-  # mchal <- matrix(nrow = nrow(icow_part_cyr), ncol = length(vlchal))
-  # mtgt <- mchal
-  #icow_part_cyr <- cbind(icow_part_cyr, mchal, mtgt)
-  # vl2 <- colnames(dplyr::select(icow_part_cyr, ends_with("1")))
-  # vl2 <- gsub('.{0,1}$', '', vl1)
-  #if (icow_part_cyr$ccode1 == icow_part_cyr$chal) {
-  sub1 <- icow_part_cyr %>% rownames_to_column("rownum") %>% filter(ccode1 == chal) %>% select_if(names(.) %in% c(vl1, "chal")) # var1 assigend to chal
-  sub2 <- icow_part_cyr %>% rownames_to_column('rownum') %>% filter(ccode1 == tgt)  %>% select_if(names(.) %in% c(vl1, "tgt")) # var1 assigend to tgt
-  sub3 <- icow_part_cyr %>% rownames_to_column("rownum") %>% filter(ccode2 == chal) %>% select_if(names(.) %in% c(vl2, "chal")) #var2 assigned to chal
-  sub4 <- icow_part_cyr %>% rownames_to_column('rownum') %>% filter(ccode2 == tgt)  %>% select_if(names(.) %in% c(vl2, "tgt")) # Var2 assigned to target
-  colnames(sub1) <- c("rownum", "chal", "year", vchal)
-  colnames(sub2) <- c("rownum", "tgt", "year", vtgt)
-  colnames(sub3) <- c("rownum", "chal", "year", vchal)
-  colnames(sub4) <- c("rownum", "tgt", "year", vtgt)
-  # Combine sub1 and sub2 to get a matrix of _chal options
-  #colnames(icow_part_cyr) %in% colnames(a)
-  # Sub1 and 2 are corresponding
+sub1 <- icow_part_cyr %>% rownames_to_column("rownum") %>% filter(ccode1 == chal) %>% select_if(names(.) %in% c(vl1, "chal")) # var1 assigend to chal
+sub2 <- icow_part_cyr %>% rownames_to_column('rownum') %>% filter(ccode1 == tgt)  %>% select_if(names(.) %in% c(vl1, "tgt")) # var1 assigend to tgt
+sub3 <- icow_part_cyr %>% rownames_to_column("rownum") %>% filter(ccode2 == chal) %>% select_if(names(.) %in% c(vl2, "chal")) #var2 assigned to chal
+sub4 <- icow_part_cyr %>% rownames_to_column('rownum') %>% filter(ccode2 == tgt)  %>% select_if(names(.) %in% c(vl2, "tgt")) # Var2 assigned to target
+colnames(sub1) <- c("rownum", "chal", "year", vchal)
+colnames(sub2) <- c("rownum", "tgt", "year", vtgt)
+colnames(sub3) <- c("rownum", "chal", "year", vchal)
+colnames(sub4) <- c("rownum", "tgt", "year", vtgt)
+# Notes
   # sub1 contains vars for chal when chal == ccode1, 
   # sub2 contains vars for target when target == ccode1
   # sub3 contains vars for chal when chal == ccode2
   # sub4 contains vars for tgt when tgt == ccode2
   # Combine sub1 and sub4 to get variables for chal(ccode1)-tgt(ccode2) pair
   # Combine sub2 and sub3 to get variables for chal(ccode2)-tgt(ccode1) pair
-  subc <- cbind(dplyr::select(sub1, -ccode_chal), dplyr::select(sub4, -ccode_tgt, -year, -rownum))
-  subt <- cbind(dplyr::select(sub2, -ccode_tgt), dplyr::select(sub3, -ccode_chal, -year, -rownum))
-  subf <- arrange(rbind(subc, subt), as.numeric(rownum))
-  # a$rownum <- as.numeric(a$rownum)
-  # b$rownum <- as.numeric(b$rownum)
-  # d <- left_join(icow_part_cyr, dplyr::select(b, -target))  
-  # If in sub1, ccode1 == chal - want to merge data on ccode1 year
-  # If in sub2, ccode1 == target - want to merge data on ccode1 year
-  # If in sub3, ccode2 == chal - want to merge data on ccode2 year
-  # If in sub4, ccode2 == tgt - want to merge ccode2 to target
-  icow_part_cyr_ct <- icow_part_cyr
-  icow_part_cyr_ct <- left_join(icow_part_cyr_ct, subf, by = c("chal", "tgt", "year"))
+subc <- cbind(dplyr::select(sub1, -ccode_chal), dplyr::select(sub4, -ccode_tgt, -year, -rownum))
+subt <- cbind(dplyr::select(sub2, -ccode_tgt), dplyr::select(sub3, -ccode_chal, -year, -rownum))
+subf <- arrange(rbind(subc, subt), as.numeric(rownum))
+icow_part_cyr_ct <- icow_part_cyr
+icow_part_cyr_ct <- left_join(icow_part_cyr_ct, subf, by = c("chal", "tgt", "year"))
 
-  # with(a, cbind(ccode1, ccode2, chal, tgt, gdp1, gdp_chal, polity21, polity2_chal, lcinc2, lcinc_tgt, solsminchdum1, solsminchudum_chal))
-  
-  
-  
-  
-  write_csv(icow_part_cyr_ct, "icow_part_cyr_ct.csv")
-  
-  
-  # 
-  # a# Drop chal
-  # # Merge on ccode_chal == ccode1 & year = 
-  # 
-  # arrange(a, rownum)
-  # 
-  # sub1[sub1$rownum, -1:-2]
-  # sub3[sub3$rownum, -1:-2]
-  # 
- #  mchal <- rbind(sub1, sub3)
- # #  mtgt <- rbind(sub2, sub4)
- #  # colnames(mchal) <- vchal
- #  # colnames(mtgt) <- vtgt
- #  #   # 
- #  #   # sub2[sub2$rownum, -1:-2]
- #  #   # 
- #    mchal[as.numeric(sub1$rownum), ] <- sub1[sub1$rownum, -1:-2]
- #    mchal[as.numeric(sub3$rownum), ] <- sub3[sub3$rownum, -1:-2]
- #    mtgt[as.numeric(sub2$rownum), ] <- sub2[sub2$rownum, -1:-2]
- #    mtgt[as.numeric(sub4$rownum), ] <- sub4[sub4$rownum, -1:-2]
- #    # 
- #    # 
- #    # filter(icow_part_cyr, ccode1 == chal) %>% 
-    #   icow_part_cyr  %>% rownames_to_column('rownum') %>% filter(ccode1 == chal) 
-    # sub2 <- icow_part_cyr %>% rownames_to_column('row') %>% filter(ccode1 == tgt)  %>% select_if(names(.) %in% vl1) 
-    # sub3 <- icow_part_cyr %>% select_if(names(.) %in% vl2) %>% rownames_to_column('row') %>% filter(ccode2 == chal)
-    # sub4 <- icow_part_cyr %>% select_if(names(.) %in% vl2) %>% rownames_to_column('row') %>% filter(ccode2 == tgt) 
-  
+write_csv(icow_part_cyr_ct, "./data/icow_part_cyr_ct.csv")
 
-# } else if (icow_part_cyr$ccode2 == icow_part_cyr$chal) {
-#   
-# }
-# if (icow_part_cyr$ccode1 == icow_part_cyr$chal) {
-#   icow_part_cyr <- setNames(icow_part_cyr, paste0(names(dplyr::select(icow_part_cyr, ends_with("1"))), "_chal"))
-#   icow_part_cyr <- setNames(icow_part_cyr, paste0(names(dplyr::select(icow_part_cyr, ends_with("2"))), "_tgt"))
-# } else if (icow_part_cyr$ccode2 == icow_part_cyr$chal) {
-#   icow_part_cyr <- setNames(icow_part_cyr, paste0(names(dplyr::select(icow_part_cyr, ends_with("2"))), "_chal"))
-#   icow_part_cyr <- setNames(icow_part_cyr, paste0(names(dplyr::select(icow_part_cyr, ends_with("1"))), "_tgt"))
-# }
-  
-  
-  
   ### Results of settlement attempt
   # # Agree - settlement attempt resulted in an agreement - only missings are ongoing at end of data
   # summary(icow_set[is.na(icow_set$agree), "year"])
