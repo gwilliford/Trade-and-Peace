@@ -36,11 +36,13 @@ dtrade$flow2 <- ifelse(dtrade$flow2 < 0, NA, dtrade$flow2)
 dtrade$smoothtotrade <- ifelse(dtrade$smoothtotrade < 0, NA, dtrade$smoothtotrade)
 
 ### Total global trade for each country-year
+# Barbieri in millions of dollars
+# Maddison in dollars
 # Get sum of imports, exports, and both when country i is ccode1
 dtrade1 <- dtrade %>% group_by(ccode1, year) %>% summarize(
   imp1 = sum(flow1, na.rm = T), # sum of exports
   exp1 = sum(flow2, na.rm = T), # sum of imports
-  agg1 = imp1 + exp1
+  agg1 = imp1 + exp1 # total trade
 ) %>% rename(ccode = ccode1)
 # Get sum of imports and exports when country i is ccode2
 dtrade2 <- dtrade %>% group_by(ccode2, year) %>% summarize(
@@ -67,8 +69,8 @@ icow_full_cyr$salint2 = with(icow_full_cyr, ifelse(chal == ccode2, max(salintc),
 ### ICOS partial data
 icow_part_cyr <- read_dta("./data/ICOWdyadyr.dta")
 icow_part_dyr <- icow_part_cyr %>% group_by(dyad, year) %>% summarize(
-  ntclaimp = sum(terriss, na.rm = T),
-  btclaimp = max(terriss),
+  ntclaim = sum(terriss, na.rm = T),
+  btclaim = max(terriss),
   nmclaim = sum(mariss, na.rm = T),
   bmclaim = max(mariss),
   nrclaim = sum(riveriss, na.rm = T),
@@ -274,8 +276,8 @@ dat$trdev = dat$trade - dat$mtrade
 dat$lntrdev = dat$lntrade - dat$mlntrade
 
 # Dependence on global trade
-dat$tdeptot1 = dat$aggtot1/dat$gdp1
-dat$tdeptot2 = dat$aggtot2/dat$gdp2
+dat$tdeptot1 = dat$exptot1/dat$gdp1 * 1000000
+dat$tdeptot2 = dat$exptot2/dat$gdp2 * 1000000
 dat$tdeptotmax = rowMaxs(cbind(dat$tdeptot1, dat$tdeptot2))
 dat$lntdeptot1 = ifelse(dat$tdeptot1 == 0, 0, log(dat$tdeptot1))
 dat$lntdeptot2 = ifelse(dat$tdeptot2 == 0, 0, log(dat$tdeptot2))
@@ -300,6 +302,10 @@ dat$lnccdist <- ifelse(dat$ccdistance == 0, 0, log(dat$ccdistance))
 dat$conttype[is.na(dat$conttype)] <- 6
 dat$contdir <- ifelse(dat$conttype == 1, 1, 0)
 dat$dyterrclaim <- ifelse(is.na(dat$dyterrclaim), 0, 1)
+dat$btclaim <- ifelse(is.na(dat$btclaim), 0, 1)
+dat$bmclaim <- ifelse(is.na(dat$bmclaim), 0, 1)
+dat$brclaim <- ifelse(is.na(dat$brclaim), 0, 1)
+
 #dat$cyricowsal <- ifelse(!is.na(dat$cyrsal), dat$cyrsal, 0)
 dat$mainland <- ifelse(!is.na(dat$mainland), 1, 0)
 dat$defense <- ifelse(is.na(dat$defense), 0, dat$defense)
@@ -308,6 +314,7 @@ dat$ndymid <- ifelse(is.na(dat$ndymid), 0, 1)
 dat$caprat <- rowMaxs(cbind(dat$cinc1, dat$cinc2)) / (dat$cinc1 + dat$cinc2)
 dat$demdy <- ifelse(dat$polity21 > 5 & dat$polity22 > 5, 1, 0)
 dat$y2 = (dat$year^2) / 1000
+dat$y3 = (dat$year^3) / 1000
 
 # Lags
 dat <- dat %>% arrange(dyad, year) %>% mutate(
@@ -335,34 +342,38 @@ dat <- dat %>% arrange(dyad, year) %>% mutate(
 
 termod <- lmer(lntrade ~ ldyterrclaim + lag_ln_gdp1 + lag_ln_gdp2 + lag_ln_gdpcap1 + lag_ln_gdpcap2 + 
               contdir + ldefense + lcaprat + lpol1 * lpol2 + year + y2 + (1 | dyad) + (1 | year), data = dat, 
-            control = lmerControl(optimizer = "optimx", calc.derivs = FALSE, optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
+            control = lmerControl(optimizer = "optimx", calc.derivs = FALSE,
+                                  optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
 # summary(tm1);r.squaredGLMM(tm1) #  .662/.93 lndymid
-marmod <- lmer(lntrade ~ lbmclaim + lag_ln_gdp1 + lag_ln_gdp2 + lag_ln_gdpcap1 + lag_ln_gdpcap2 + 
-                 contdir + ldefense + lcaprat + lpol1 * lpol2 + year + y2 + (1 | dyad) + (1 | year), data = dat, 
-               control = lmerControl(optimizer = "optimx", calc.derivs = FALSE, optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
-rivmod <- lmer(lntrade ~ lbrclaim + lag_ln_gdp1 + lag_ln_gdp2 + lag_ln_gdpcap1 + lag_ln_gdpcap2 + 
-                 contdir + ldefense + lcaprat + lpol1 * lpol2 + year + y2 + (1 | dyad) + (1 | year), data = dat, 
-               control = lmerControl(optimizer = "optimx", calc.derivs = FALSE, optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
+# marmod <- lmer(lntrade ~ lbmclaim + lag_ln_gdp1 + lag_ln_gdp2 + lag_ln_gdpcap1 + lag_ln_gdpcap2 + 
+#                  contdir + ldefense + lcaprat + lpol1 * lpol2 + year + y2 + (1 | dyad) + (1 | year), data = dat, 
+#                control = lmerControl(optimizer = "optimx", calc.derivs = FALSE,
+#                                      optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
+# rivmod <- lmer(lntrade ~ lbrclaim + lag_ln_gdp1 + lag_ln_gdp2 + lag_ln_gdpcap1 + lag_ln_gdpcap2 + 
+#                  contdir + ldefense + lcaprat + lpol1 * lpol2 + year + y2 + (1 | dyad) + (1 | year), data = dat, 
+#                control = lmerControl(optimizer = "optimx", calc.derivs = FALSE,
+#                                      optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
 
 dsim <- dat
 dsim$ldyterrclaim <- 0
-dsim$nmclaim <- 0
-dsim$nrclaim <- 0
+dsim$lbrclaim <- 0
+dsim$lmclaim <- 0
 dat$tsim <- predict(termod, dsim, allow.new.levels = T)
-dat$msim <- predict(marmod, dsim, allow.new.levels = T)
-dat$rsim <- predict(rivmod, dsim, allow.new.levels = T)
+# dat$msim <- predict(marmod, dsim, allow.new.levels = T)
+# dat$rsim <- predict(rivmod, dsim, allow.new.levels = T)
 
 #dat$trsim1 <- predict(tm1, dsim1, allow.new.levels = T)
 #dat$ugtpred <- trsim0 - trsim1
 # dat$dyugt  <- dat$trsim0 - dat$lntrade #doesn't look great
 dat$terugt <- dat$tsim - dat$lntrade
-dat$marugt <- dat$msim - dat$lntrade
-dat$rivugt <- dat$rsim - dat$lntrade
+# dat$marugt <- dat$msim - dat$lntrade
+# dat$rivugt <- dat$rsim - dat$lntrade
 # dat$ugtdep1  <- dat$ugt/dat$gdp1 * 100000
 # dat$ugtdep2 <- dat$ugt/dat$gdp2 * 100000
 # dat$ugtdept <- dat$ugt/dat$gdpt * 100000
 # dat$ugtdivtr1 <- dat$ugt/dat$sflow2
 # dat$ugtdivtr2 <- dat$ugt/dat$sflow1
+# dat$totugt <- dat$terugt + dat$marugt + dat$rivugt
 
 # sum(!is.na(dat[dat$ldyterrclaim == 1, "ugt"]))
 # sum(!is.na(icow_cyr_part_out[icow_cyr_part_out$ldyterrclaim == 1, "ugt"]))
@@ -370,7 +381,8 @@ dat$rivugt <- dat$rsim - dat$lntrade
 dat <- dat %>% arrange(dyad, year) %>% mutate(
   lterugt = lag(terugt),
   lmarugt = lag(marugt), 
-  lrivugt = lag(rivugt)
+  lrivugt = lag(rivugt),
+  ltotugt = lag(totugt),
   # lugtdep1 = lag(ugtdep1),
   # lugtdep2 = lag(ugtdep2),
   # lugtdept = lag(ugtdept),
