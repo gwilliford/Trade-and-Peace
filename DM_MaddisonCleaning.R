@@ -1,4 +1,4 @@
-setwd('C:/Users/gwill/Dropbox/Research/Dissertation/TradeModels')
+setwd('C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis')
 library(readxl)
 library(readr)
 library(dplyr)
