@@ -16,8 +16,6 @@ icow_set$agreeiss <- ifelse(is.na(icow_set$agreeiss), 0, icow_set$agreeiss)
 
 
 
-
-
 ##### Collapse icow settlement data to dyad year format
 icow_set_col <- icow_set %>% group_by(dyad, year) %>% summarize (
   sagree = sum(agree),
@@ -32,6 +30,7 @@ icow_set_col$bagreeiss <- ifelse(icow_set_col$sagreeiss > 0, 1, 0)
 icow_set$ag_end_any  <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 1:2, 1, 0)
 icow_set$ag_end_part <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 1, 1, 0)
 icow_set$ag_end_full <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 2, 1, 0)
+icow_set$concany <- ifelse(icow_set$conc)
 
 
 
@@ -78,7 +77,7 @@ icow_part_cyr$other = ifelse(icow_part_cyr$resother == 1 & icow_part_cyr$year ==
 # icow_part_dyr$y0 <- icow_part_dyr$year - 1
 
 #icow_part_cyr_out <- full_join(dat, icow_part_cyr)
-icow_part_cyr <- left_join(icow_part_cyr, dplyr::select(icow_set, dyad, year, agree, agreeiss, ag_end_any, ag_end_part, ag_end_full)) # need to resolve duplication here - probably just drop variables on other sidef
+icow_part_cyr <- left_join(icow_part_cyr, dplyr::select(icow_set, dyad, year, agree, agreeiss, ag_end_any, ag_end_part, ag_end_full, concany, concchal, conctgt)) # need to resolve duplication here - probably just drop variables on other sidef
 icow_part_cyr$agree <- ifelse(icow_part_cyr$agreeiss == 0 | is.na(icow_part_cyr$agreeiss), 0, icow_part_cyr$agreeiss)
 icow_part_cyr$agreeiss <- ifelse(icow_part_cyr$agreeiss == 0 | is.na(icow_part_cyr$agreeiss), 0, icow_part_cyr$agreeiss)
 icow_part_cyr$ag_end_any <- ifelse(icow_part_cyr$ag_end_any == 0 | is.na(icow_part_cyr$ag_end_any), 0, icow_part_cyr$ag_end_any)
@@ -130,10 +129,22 @@ vl2 <- colnames(dplyr::select(icow_part_cyr, ends_with("2"), -y2))
   vtgt <- gsub('.{0,1}$', '', vl2)
   vtgt <- paste0(vtgt, '_tgt')
   vl2 <- c(vl2, "rownum", "year")
-sub1 <- icow_part_cyr %>% rownames_to_column("rownum") %>% filter(ccode1 == chal) %>% select_if(names(.) %in% c(vl1, "chal")) # var1 assigend to chal
-sub2 <- icow_part_cyr %>% rownames_to_column('rownum') %>% filter(ccode1 == tgt)  %>% select_if(names(.) %in% c(vl1, "tgt")) # var1 assigend to tgt
-sub3 <- icow_part_cyr %>% rownames_to_column("rownum") %>% filter(ccode2 == chal) %>% select_if(names(.) %in% c(vl2, "chal")) #var2 assigned to chal
-sub4 <- icow_part_cyr %>% rownames_to_column('rownum') %>% filter(ccode2 == tgt)  %>% select_if(names(.) %in% c(vl2, "tgt")) # Var2 assigned to target
+sub1 <- icow_part_cyr %>% 
+  rownames_to_column("rownum") %>%
+  filter(ccode1 == chal) %>%
+  select_if(names(.) %in% c(vl1, "chal")) # var1 assigend to chal
+sub2 <- icow_part_cyr %>% 
+  rownames_to_column('rownum') %>%
+  filter(ccode1 == tgt)  %>%
+  select_if(names(.) %in% c(vl1, "tgt")) # var1 assigend to tgt
+sub3 <- icow_part_cyr %>%
+  rownames_to_column("rownum") %>%
+  filter(ccode2 == chal) %>%
+  select_if(names(.) %in% c(vl2, "chal")) #var2 assigned to chal
+sub4 <- icow_part_cyr %>%
+  rownames_to_column('rownum') %>%
+  filter(ccode2 == tgt)  %>%
+  select_if(names(.) %in% c(vl2, "tgt")) # Var2 assigned to target
 colnames(sub1) <- c("rownum", "chal", "year", vchal)
 colnames(sub2) <- c("rownum", "tgt", "year", vtgt)
 colnames(sub3) <- c("rownum", "chal", "year", vchal)
@@ -141,8 +152,8 @@ colnames(sub4) <- c("rownum", "tgt", "year", vtgt)
 subc <- cbind(dplyr::select(sub1, -ccode_chal), dplyr::select(sub4, -ccode_tgt, -year, -rownum))
 subt <- cbind(dplyr::select(sub2, -ccode_tgt), dplyr::select(sub3, -ccode_chal, -year, -rownum))
 subf <- arrange(rbind(subc, subt), as.numeric(rownum))
-icow_part_cyr_ct <- icow_part_cyr
-icow_part_cyr_ct <- left_join(icow_part_cyr_ct, subf, by = c("chal", "tgt", "year"))
+icow_part_cyr_ct <- cbind(icow_part_cyr, subf)
+# icow_part_cyr_ct <- left_join(icow_part_cyr, subf)
 
 write_csv(icow_part_cyr_ct, "./data/icow_part_cyr_ct.csv")
 
