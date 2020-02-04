@@ -1,15 +1,24 @@
+library(readr)
+library(haven)
 library(dplyr)
+
 library(tibble)
 
+if(!exists("dat")) dat <- read_csv("./data/TradeInputs.csv")
 
-### ICOW settlement data
+
+##### ICOW settlement data
 icow_set <- read_dta("./data/ICOWsettle.dta")
-icow_set <- icow_set %>% filter(midiss == 0 & terriss == 1) # drop mids and non-territorial claims
+icow_set <- icow_set %>% filter(midiss == 0) # drop mids and non-territorial claims
 
 icow_set <- dplyr::select(icow_set, -mid)
 icow_set$agreeiss <- ifelse(is.na(icow_set$agreeiss), 0, icow_set$agreeiss)
 
-### Collapse icow settlement data to dyad year format
+
+
+
+
+##### Collapse icow settlement data to dyad year format
 icow_set_col <- icow_set %>% group_by(dyad, year) %>% summarize (
   sagree = sum(agree),
   sagreeiss = sum(agreeiss)
@@ -24,7 +33,9 @@ icow_set$ag_end_any  <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 1:2
 icow_set$ag_end_part <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 1, 1, 0)
 icow_set$ag_end_full <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 2, 1, 0)
 
-### ICOW aggregate claim data
+
+
+##### ICOW aggregate claim data 
 icow_claimdy <- read_dta("./data/ICOWclaimdy.dta")
 icow_claimdy <- icow_claimdy %>% filter(terriss == 1)
 icow_claimdy$reschdrop = ifelse(icow_claimdy$resolved %in% c(1, 2), 1, 0)
@@ -34,20 +45,22 @@ icow_claimdy$respleb = ifelse(icow_claimdy$resolved == 10, 1, 0)
 icow_claimdy$respset = ifelse(icow_claimdy$resolved %in% c(4, 12, 13, 14), 1, 0)
 icow_claimdy$resother = ifelse(icow_claimdy$resolved %in% c(5, 6, 11), 1, 0) # independence, actor leaves system, disp territory no longer exists
 
-### ICOW Partial Claim-Year Data
-icow_part_cyr  <- read_dta("./data/ICOWdyadyr.dta")
+
+
+##### ICOW Partial Claim-Year Data
+icow_part_cyr <- read_dta("./data/ICOWdyadyr.dta")
 icow_part_cyr  <- filter(icow_part_cyr, terriss == 1)
 icow_part_cyr$y0 <- icow_part_cyr$year - 1
 icow_part_cyr <- icow_part_cyr %>% group_by(dyad) %>% mutate(
   fyear = max(year)
 )
-# icow_part_cyr <- left_join(icow_part_cyr, dplyr::select(icow_claimdy, dyad, reschdrop, resmil, restgtdrop, respleb, respset, resother))
-# icow_part_cyr$chdrop = ifelse(icow_part_cyr$reschdrop == 1 & icow_part_cyr$year == icow_part_cyr$fyear, 1, 0)
-# icow_part_cyr$milres = ifelse(icow_part_cyr$resmil == 1 & icow_part_cyr$year == icow_part_cyr$fyear, 1, 0)
-# icow_part_cyr$tgtdrop = ifelse(icow_part_cyr$restgtdrop == 1 & icow_part_cyr$year == icow_part_cyr$fyear, 1, 0)
-# icow_part_cyr$pleb = ifelse(icow_part_cyr$respleb == 1 & icow_part_cyr$year == icow_part_cyr$fyear, 1, 0)
-# icow_part_cyr$pset = ifelse(icow_part_cyr$respset == 1 & icow_part_cyr$year == icow_part_cyr$fyear, 1, 0)
-# icow_part_cyr$other = ifelse(icow_part_cyr$resother == 1 & icow_part_cyr$year == icow_part_cyr$fyear, 1, 0)
+icow_part_cyr <- left_join(icow_part_cyr, dplyr::select(icow_claimdy, dyad, reschdrop, resmil, restgtdrop, respleb, respset, resother))
+icow_part_cyr$chdrop = ifelse(icow_part_cyr$reschdrop == 1 & icow_part_cyr$year == icow_part_cyr$fyear, 1, 0)
+icow_part_cyr$milres = ifelse(icow_part_cyr$resmil == 1 & icow_part_cyr$year == icow_part_cyr$fyear, 1, 0)
+icow_part_cyr$tgtdrop = ifelse(icow_part_cyr$restgtdrop == 1 & icow_part_cyr$year == icow_part_cyr$fyear, 1, 0)
+icow_part_cyr$pleb = ifelse(icow_part_cyr$respleb == 1 & icow_part_cyr$year == icow_part_cyr$fyear, 1, 0)
+icow_part_cyr$pset = ifelse(icow_part_cyr$respset == 1 & icow_part_cyr$year == icow_part_cyr$fyear, 1, 0)
+icow_part_cyr$other = ifelse(icow_part_cyr$resother == 1 & icow_part_cyr$year == icow_part_cyr$fyear, 1, 0)
 
 ### ICOW Partial Dyad-Year Data
 # icow_part_dyr <- icow_part_cyr %>% group_by(dyad, year) %>% summarize(
@@ -73,7 +86,7 @@ icow_part_cyr$ag_end_part <- ifelse(icow_part_cyr$ag_end_part == 0 | is.na(icow_
 icow_part_cyr$ag_end_full <- ifelse(icow_part_cyr$ag_end_full == 0 | is.na(icow_part_cyr$ag_end_full), 0, icow_part_cyr$ag_end_full)
 icow_part_cyr <- left_join(icow_part_cyr, dat)
 icow_part_cyr <- ungroup(icow_part_cyr[!is.na(icow_part_cyr$ccode1) & !is.na(icow_part_cyr$ccode2), ])
-
+write_csv(icow_part_cyr, "icow_part_cyr.csv")
 # icow_part_dyr <- left_join(icow_part_dyr, dat)
 # icow_part_dyr <- left_join(icow_part_dyr, icow_set_col)
 # icow_part_dyr <- left_join(icow_part_dyr, icow_claimdy)
@@ -103,11 +116,17 @@ icow_part_cyr <- ungroup(icow_part_cyr[!is.na(icow_part_cyr$ccode1) & !is.na(ico
 #if (icow_part_cyr$ccode1 == icow_part_cyr$chal) {
 
 # Create challenger/target dataset
+  # sub1 contains vars for chal when chal == ccode1, 
+  # sub2 contains vars for target when target == ccode1
+  # sub3 contains vars for chal when chal == ccode2
+  # sub4 contains vars for tgt when tgt == ccode2
+  # Combine sub1 and sub4 to get variables for chal(ccode1)-tgt(ccode2) pair
+  # Combine sub2 and sub3 to get variables for chal(ccode2)-tgt(ccode1) pair
 vl1 <- colnames(dplyr::select(icow_part_cyr, ends_with("1")))
   vchal <- gsub('.{0,1}$', '', vl1)
   vchal <- paste0(vchal, '_chal')
   vl1 <- c(vl1, "rownum", "year")
-vl2 <- colnames(dplyr::select(icow_part_cyr, ends_with("2")))
+vl2 <- colnames(dplyr::select(icow_part_cyr, ends_with("2"), -y2))
   vtgt <- gsub('.{0,1}$', '', vl2)
   vtgt <- paste0(vtgt, '_tgt')
   vl2 <- c(vl2, "rownum", "year")
@@ -119,13 +138,6 @@ colnames(sub1) <- c("rownum", "chal", "year", vchal)
 colnames(sub2) <- c("rownum", "tgt", "year", vtgt)
 colnames(sub3) <- c("rownum", "chal", "year", vchal)
 colnames(sub4) <- c("rownum", "tgt", "year", vtgt)
-# Notes
-  # sub1 contains vars for chal when chal == ccode1, 
-  # sub2 contains vars for target when target == ccode1
-  # sub3 contains vars for chal when chal == ccode2
-  # sub4 contains vars for tgt when tgt == ccode2
-  # Combine sub1 and sub4 to get variables for chal(ccode1)-tgt(ccode2) pair
-  # Combine sub2 and sub3 to get variables for chal(ccode2)-tgt(ccode1) pair
 subc <- cbind(dplyr::select(sub1, -ccode_chal), dplyr::select(sub4, -ccode_tgt, -year, -rownum))
 subt <- cbind(dplyr::select(sub2, -ccode_tgt), dplyr::select(sub3, -ccode_chal, -year, -rownum))
 subf <- arrange(rbind(subc, subt), as.numeric(rownum))
@@ -156,13 +168,7 @@ write_csv(icow_part_cyr_ct, "./data/icow_part_cyr_ct.csv")
   # 1: Agreement reached, but at least one didn't ratify or comply
   # 0: Attempt did not produce an agreement
   # Results of settlement attempt disaggregated by partial and total claim termination
-  # Did cm attempt lead to an agreement that ended all or part of the claim?
-  icow_set$ag_end_any  <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 1:2, 1, 0)
-  # Did CM attempt lead to an agreement that ended part of the claim?
-  icow_set$ag_end_part <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 1, 1, 0)
-  # Did cm attempt lead to an agreement that ended all of the claim?
-  icow_set$ag_end_full <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 2, 1, 0)
-  
+
   # Alternate coding possibility - subset to agreements only and code outcomes
   
   ### Claim resolution variables
