@@ -1,4 +1,4 @@
-setwd('C:\Users/gwill/Dropbox/Research/Dissertation/TradeModels')
+setwd('C:/Users/gwill/Dropbox/Research/Dissertation/TradeModels')
 library(readxl)
 library(readr)
 library(dplyr)
@@ -6,7 +6,7 @@ library(countrycode)
 
 madd <- read_excel("./data/mpd2018.xlsx", sheet = "Full data", n_max = 19357)
 madd$ccode <- as.numeric(with(madd, countrycode(countrycode, 'iso3c', 'cown')))
-madd$gdp <- madd$rgdpnapc/madd$pop
+madd$gdp <- madd$rgdpnapc *madd$pop * 1000 # population is measured in 1000s
 
 mp <- read_excel("./data/parmac_madisonGDP_updated.xlsx")
 
