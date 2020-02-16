@@ -1,11 +1,29 @@
+setwd("C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis")
 library(readr)
 library(haven)
 library(dplyr)
 
 library(tibble)
 
-if(!exists("dat")) dat <- read_csv("./data/TradeInputs.csv")
+if(!exists("dat")) dat <- load("./data/TradeOut.Rdata")
 
+##### Predicted trade values
+  dat$terugt <- dat$tsim - dat$ln_trade
+  dat$marugt <- dat$msim - dat$ln_trade
+  dat$rivugt <- dat$rsim - dat$ln_trade
+  
+  # sum(!is.na(dat[dat$ldyterrclaim == 1, "ugt"]))
+  # sum(!is.na(icow_cyr_part_out[icow_cyr_part_out$ldyterrclaim == 1, "ugt"]))
+  
+  dat$terugtdep1 <- dat$terugt / dat$ln_gdp1
+  dat$terugtdep2 <- dat$terugt / dat$ln_gdp2
+  dat$terugtdepmax <- rowMaxs(cbind(dat$terugtdep1, dat$terugtdep2))
+  dat$rivugtdep1 <- dat$terugt / dat$ln_gdp1
+  dat$rivugtdep2 <- dat$terugt / dat$ln_gdp2
+  dat$rivugtdepmax <- rowMaxs(cbind(dat$rivugtdep1, dat$rivugtdep2))
+  dat$marugtdep1 <- dat$terugt / dat$ln_gdp1
+  dat$marugtdep2 <- dat$terugt / dat$ln_gdp2
+  dat$marugtdepmax <- rowMaxs(cbind(dat$marugtdep1, dat$marugtdep2))
 
 ##### ICOW settlement data
 icow_set <- read_dta("./data/ICOWsettle.dta")
@@ -13,8 +31,6 @@ icow_set <- icow_set %>% filter(midiss == 0) # drop mids and non-territorial cla
 
 icow_set <- dplyr::select(icow_set, -mid)
 icow_set$agreeiss <- ifelse(is.na(icow_set$agreeiss), 0, icow_set$agreeiss)
-
-
 
 ##### Collapse icow settlement data to dyad year format
 icow_set_col <- icow_set %>% group_by(dyad, year) %>% summarize (
@@ -30,13 +46,11 @@ icow_set_col$bagreeiss <- ifelse(icow_set_col$sagreeiss > 0, 1, 0)
 icow_set$ag_end_any  <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 1:2, 1, 0)
 icow_set$ag_end_part <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 1, 1, 0)
 icow_set$ag_end_full <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 2, 1, 0)
-icow_set$concany <- ifelse(icow_set$conc)
-
-
+icow_set$concany <- ifelse(is.naicow_set$concany, 0, 1)
 
 ##### ICOW aggregate claim data 
 icow_claimdy <- read_dta("./data/ICOWclaimdy.dta")
-icow_claimdy <- icow_claimdy %>% filter(terriss == 1)
+icow_claimdy <- icow_claimdy # %>% filter(terriss == 1)
 icow_claimdy$reschdrop = ifelse(icow_claimdy$resolved %in% c(1, 2), 1, 0)
 icow_claimdy$resmil = ifelse(icow_claimdy$resolved == 7, 1, 0)
 icow_claimdy$restgtdrop = ifelse(icow_claimdy$resolved %in% c(8, 9), 1, 0)
@@ -45,21 +59,85 @@ icow_claimdy$respset = ifelse(icow_claimdy$resolved %in% c(4, 12, 13, 14), 1, 0)
 icow_claimdy$resother = ifelse(icow_claimdy$resolved %in% c(5, 6, 11), 1, 0) # independence, actor leaves system, disp territory no longer exists
 
 
-
 ##### ICOW Partial Claim-Year Data
 icow_part_cyr <- read_dta("./data/ICOWdyadyr.dta")
-icow_part_cyr  <- filter(icow_part_cyr, terriss == 1)
+icow_part_cyr  <- filter(icow_part_cyr)
 icow_part_cyr$y0 <- icow_part_cyr$year - 1
 icow_part_cyr <- icow_part_cyr %>% group_by(dyad) %>% mutate(
   fyear = max(year)
 )
+
+
+# Code resolution type variable
 icow_part_cyr <- left_join(icow_part_cyr, dplyr::select(icow_claimdy, dyad, reschdrop, resmil, restgtdrop, respleb, respset, resother))
-icow_part_cyr$chdrop = ifelse(icow_part_cyr$reschdrop == 1 & icow_part_cyr$year == icow_part_cyr$fyear, 1, 0)
-icow_part_cyr$milres = ifelse(icow_part_cyr$resmil == 1 & icow_part_cyr$year == icow_part_cyr$fyear, 1, 0)
-icow_part_cyr$tgtdrop = ifelse(icow_part_cyr$restgtdrop == 1 & icow_part_cyr$year == icow_part_cyr$fyear, 1, 0)
-icow_part_cyr$pleb = ifelse(icow_part_cyr$respleb == 1 & icow_part_cyr$year == icow_part_cyr$fyear, 1, 0)
-icow_part_cyr$pset = ifelse(icow_part_cyr$respset == 1 & icow_part_cyr$year == icow_part_cyr$fyear, 1, 0)
-icow_part_cyr$other = ifelse(icow_part_cyr$resother == 1 & icow_part_cyr$year == icow_part_cyr$fyear, 1, 0)
+# icow_part_cyr$chdrop = ifelse(icow_part_cyr$reschdrop == 1 & icow_part_cyr$year == icow_part_cyr$fyear, 1, 0)
+# icow_part_cyr$milres = ifelse(icow_part_cyr$resmil == 1 & icow_part_cyr$year == icow_part_cyr$fyear, 1, 0)
+# icow_part_cyr$tgtdrop = ifelse(icow_part_cyr$restgtdrop == 1 & icow_part_cyr$year == icow_part_cyr$fyear, 1, 0)
+# icow_part_cyr$pleb = ifelse(icow_part_cyr$respleb == 1 & icow_part_cyr$year == icow_part_cyr$fyear, 1, 0)
+# icow_part_cyr$pset = ifelse(icow_part_cyr$respset == 1 & icow_part_cyr$year == icow_part_cyr$fyear, 1, 0)
+# icow_part_cyr$other = ifelse(icow_part_cyr$resother == 1 & icow_part_cyr$year == icow_part_cyr$fyear, 1, 0)
+
+# ICOW compliance coding
+# Claimdy is already separate 
+# icow_part_cyr <- left_join(icow_part_cyr, icow_set, by = c("claimdy", "year"), suffix = c("", ".y"))
+# icow_part_cyr$agreeiss <- ifelse(is.na(icow_part_cyr$agreeiss), 0, icow_part_cyr$agreeiss)
+# # icow_part_cyr <- 
+# #   cumagree = cumsum(agreeiss), 
+# #   cummid = cumsum(midissyr),
+# #   # agch = as.numeric(agreeiss == 1 & cumagree != lag(cumagree)),
+# #   # agch = ifelse(is.na(agch), 0, agch)
+# #   # aggyr = ifelse(aggiss == 1, )
+# #   clbegyear = min(year), 
+# #   tyr = year - clbegyear,
+# #   agbegyr = as.numeric(agreeiss == 1),
+# #   cat = cumagree + 1,
+# #   one = 1
+# #   #ifelse(agreeiss == 1, )
+# # )
+# icow_part_cyr <- ungroup(icow_part_cyr %>% arrange(claimdy, year) %>% group_by(claimdy) %>% mutate(
+#   cumagree = cumsum(agreeiss),
+#   cummid = cumsum(midissyr),
+#   cat = cumagree + 1
+# ))
+# icow_part_cyr$clagnum = as.numeric(paste(icow_part_cyr$claimdy, icow_part_cyr$cat, sep = ""))
+# # icow_part_cyr_clagnum = icow_part_cyr %>% group
+# # icow_part_cyr = ungroup(icow_part_cyr %>% group_by(claimdy, cat) %>% mutate(
+# #   agyr = cumsum(one)
+# # ))
+# icow_part_cyr <- icow_part_cyr %>% group_by(clagnum) %>% mutate(
+#     clagcummid = cumsum(midissyr),
+#     maxclagyr = max(year)
+# )
+# 
+# icow_part_cyr$agfailmid <- ifelse(icow_part_cyr$clagcummid > 0 & icow_part_cyr$cumagree > 1 & icow_part_cyr$midissyr, 1, 0)
+# 
+# # icow_part_clagsum <- icow_part_cyr %>% group_by(clagnum) %>% summarize(
+# # )
+# # icow_part_cyr = left_join(icow_part_cyr, select(icow_part_clag, clagnum, year, icow_part_clag))
+# icow_part_cyr$clagnummid = as.numeric(with(icow_part_clag, paste(clagnum, clagcummid, sep = "")))
+# icow_part_cyr_mid = icow_part_cyr %>% group_by(clagnummid) %>% summarize(
+#   begmid = min(year)
+# )
+# icow_part_cyr = left_join(icow_part_cyr, icow_part_cyr_mid)
+# icow_part_cyr$claglastmid <- icow_part_cyr$year - icow_part_cyr$begmid
+# View(icow_part_cyr[, c("claimdy", "clagnum", "clagnummid", "clagmidyr", "year", "begmid", "agreeiss", "midissyr", "cumagree", "cummid")])
+# 
+# icow_part_midyr = icow_part_cyr %>% group_by(clagnummid) %>% summarize(
+#   maxmidyr = max(year),
+#   # maxagree = max(cumagree),
+#   # midmin = min(cummid)
+#   # maxcummid = max(cummid),
+#   # maxyr = ifelse(maxcummid == 0, )
+# )
+# icow_part_cyr <- left_join(icow_part_cyr, icow_part_midyr)
+# icow_part_cyr$agfailmid = ifelse(icow_part_cyr$year == icow_part_cyr$maxyr & icow_part_cyr$cummid)
+# maxclagyr 
+# # icow_part_cyr$agfailmid <- with(icow_part_cyr, ifelsemaxagree > cumagree
+# # icow_part_cyr <- left_join(icow_part_cyr, icow_part_clag)
+# icow_part_cyr$claglastyr = icow_part_cyr$year - icow_part_cyr$clagbegyr
+# icow_part_cyr <- icow_part_cyr %>% group_by(clagnum) %>% mutae(
+# )
+
 
 ### ICOW Partial Dyad-Year Data
 # icow_part_dyr <- icow_part_cyr %>% group_by(dyad, year) %>% summarize(
@@ -85,7 +163,7 @@ icow_part_cyr$ag_end_part <- ifelse(icow_part_cyr$ag_end_part == 0 | is.na(icow_
 icow_part_cyr$ag_end_full <- ifelse(icow_part_cyr$ag_end_full == 0 | is.na(icow_part_cyr$ag_end_full), 0, icow_part_cyr$ag_end_full)
 icow_part_cyr <- left_join(icow_part_cyr, dat)
 icow_part_cyr <- ungroup(icow_part_cyr[!is.na(icow_part_cyr$ccode1) & !is.na(icow_part_cyr$ccode2), ])
-write_csv(icow_part_cyr, "icow_part_cyr.csv")
+# write_csv(icow_part_cyr, "icow_part_cyr.csv")
 # icow_part_dyr <- left_join(icow_part_dyr, dat)
 # icow_part_dyr <- left_join(icow_part_dyr, icow_set_col)
 # icow_part_dyr <- left_join(icow_part_dyr, icow_claimdy)
