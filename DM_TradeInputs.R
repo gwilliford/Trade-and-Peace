@@ -8,6 +8,7 @@ library(matrixStats)
 library(lme4)
 library(MuMIn)
 library(optimx)
+library(DescTools)
 
 ### Import Monadic Data
 madd = read_csv("./data/madd.csv")
@@ -48,7 +49,7 @@ dtrade$smoothtotrade <- dtrade$smoothtotrade * 1000000
 # ) %>% rename(ccode = ccode1)
 # # Get sum of imports and exports when country i is ccode2
 # dtrade2 <- dtrade %>% group_by(ccode2, year) %>% summarize(
-#   imp2 = sum(flow2, na.rm = T), 
+#   imp2 = sum(flow2, na.rm = T),
 #   exp2 = sum(flow1, na.rm = T),
 #   agg2 = imp2 + exp2
 # ) %>% rename(ccode = ccode2)
@@ -56,12 +57,13 @@ dtrade$smoothtotrade <- dtrade$smoothtotrade * 1000000
 # dtradea <- full_join(dtrade1, dtrade2) %>% mutate (
 #   imptot = imp1 + imp2,
 #   exptot = exp1 + exp2,
-#   aggtot = agg1 + agg2  
+#   aggtot = agg1 + agg2
 # ) %>% select(ccode, year, imptot, exptot, aggtot)
 # dtradea$lnagg <- ifelse(dtradea$aggtot == 0, 0, log(dtradea$aggtot))
 mtrade <- read_csv('./data/National_COW_4.0.csv')
 mtrade$imports <- mtrade$imports * 1000000
 mtrade$exports <- mtrade$exports * 1000000
+mtrade$agg <- mtrade$imports + mtrade$exports
 
 ### ICOW global territory claim year data
 icow_full_cyr = read_csv("./data/ICOWprovyr101.csv")
@@ -113,11 +115,15 @@ icow_countrya <- full_join(icow_country1, icow_country2) %>% mutate (
 ### Gibler MID data
 dmid <- read_csv("./data/gml-ndy-disputes-2.0.csv")
 dmid$dyad <- undirdyads(dmid, ccode1, ccode2)
+dmid$fatality <- LOCF(dmid$fatality)
+dmid$fatality <- ifelse(dmid$fatality == -9, 0, dmid$fatality)
 dmid$dmidyr = 1
 dmiddy <- dmid %>% group_by(dyad, year) %>% summarize(
   ndymid = sum(dmidyr, na.rm = T),
-  bdymid = 1
+  bdymid = 1, 
+  fatality = max(fatality)
 )
+
 cmid1 <- dmid %>% group_by(ccode1, year) %>% summarize(
   nmidcyr1 = sum(dmidyr, na.rm = T),
   bmidcyr1 = 1
@@ -150,7 +156,8 @@ dmon = full_join(dmon, select(dpol, ccode, year, polity2))
 dmon = full_join(dmon, select(dw, ccode, year, W, S))
 dmon = full_join(dmon, chisols)
 #dmon = full_join(dmon, dtradea)
-dmon = full_join(dmon, select(mtrade, ccode, year, imports, exports))
+# dmon = full_join(dmon, mtrade)
+dmon = full_join(dmon, select(mtrade, ccode, year, imports, exports, agg))
 dmon = full_join(dmon, cmida)
 dmon = full_join(dmon, icow_countrya)
 
@@ -167,19 +174,16 @@ dmon$bterrclaim <- ifelse(is.na(dmon$bterrclaim), 0, dmon$bterrclaim)
 # sum(duplicated(dmon[, c("ccode", "year")]))
 # dmon[duplicated(dmon[, c("ccode", "year")]),]
 
-# dmon$lngdp <- log(dmon$gdp)
-# dmon$lngdpcap <- log(dmon$gdpcap)
-# dmon <- mutate(dmon,
-#   lag_ln_gdp = lag(lngdp),
-#   lag_ln_gdpcap = lag(lngdpcap),
-#   lag_ln_pop = lag(lnpop),
-#   lag_ln_agg = lag(lnagg)
-# )
+dmon <- mutate(dmon,
+)
 
 #dmon$lnpop <- log(dmon$pop)
 
 ### Monadic Lags
 dmon <- dmon %>% arrange(ccode, year) %>% mutate(
+  # Trade vars
+    ln_agg = ifelse(is.na(agg), 0, log(agg)),
+    lag_ln_agg = lag(ln_agg),
   # GDP vars
     lag_gdp = lag(gdp), 
     lag_gdpcap = lag(gdpcap),
@@ -190,9 +194,9 @@ dmon <- dmon %>% arrange(ccode, year) %>% mutate(
     pch_ln_gdp    = (ln_gdp - lag_ln_gdp)/lag_ln_gdp * 100,
     pch_ln_gdpcap = (ln_gdpcap - lag_ln_gdpcap)/lag_ln_gdpcap * 100,
   # Control vars
-    lcinc = lag(cinc),
+    lcinc = lag(cinc) * 10,
     lnmidcyr  = lag(nmidcyr),
-    lbmidcyyr = lag(bmidcyr),
+    lbmidcyr = lag(bmidcyr),
     lbterrclaim = lag(bterrclaim),
     lnterrclaim = lag(nterrclaim),
     lag_pop = lag(pop),
@@ -201,12 +205,15 @@ dmon <- dmon %>% arrange(ccode, year) %>% mutate(
   # Institutional vars
     lpol = lag(polity2), 
     lagW = lag(W),
-    lagS = lag(S)
+    lagS = lag(S),
+    dy2 = year * year / 1000
 )
 
 ### Predict total monadic trade using monadic variables
-# monmod <- lmer(lnagg ~ lnterrclaim + lag_ln_gdp + lag_ln_gdpcap + lnmidcyr + lcinc + lpol + (1 | ccode), data = dmon); summary(monmod);r.squaredGLMM(monmod) #  .662/.93
-# monsim <- dmon
+# monmod <- lmer(ln_agg ~ lbterrclaim + lag_ln_gdp + lag_ln_gdpcap + lbmidcyr + lcinc +
+#                  lpol + year + dy2,
+#                data = dmon); summary(monmod)#;r.squaredGLMM(monmod) #  .662/.93
+# bmonsim <- dmon
 # monsim$lnterrclaim <- 0
 # dmon$monsim <- predict(monmod, monsim, allow.new.levels = T)
 # dmon$ugdep1  <- dmon$ugt/dmon$gdp1 * 1000000
@@ -242,14 +249,20 @@ dally <- dally %>% group_by(dyad, year) %>% summarize(
   defense = sum(defense, na.rm = T)
 )
 
+### Thompson Rivalry Data
+triv <- read_dta("./data/ThompsonDyadYear.dta")
+# triv$trival <- ifelse(is.na(triv$trival), -1, 1)
+
 ### Merge dyadic data
 ddy <- select(dtrade, ccode1, ccode2, dyad, year, flow1, flow2, smoothflow1, smoothflow2, smoothtotrade)
-ddy <- full_join(ddy, select(ddist, dyad, year, ccdistance, mindistance))
-ddy <- full_join(ddy, select(dcont, dyad, year, conttype))
-ddy <- full_join(ddy, icow_full_dyr)
-ddy <- full_join(ddy, select(dally, dyad, year, defense))#neutrality, nonaggression, entente
-ddy <- full_join(ddy, dmiddy)
-ddy <- full_join(ddy, icow_part_dyr)
+ddy <- left_join(ddy, select(ddist, dyad, year, ccdistance, mindistance))
+ddy <- left_join(ddy, select(dcont, dyad, year, conttype))
+ddy <- left_join(ddy, icow_full_dyr)
+ddy <- left_join(ddy, select(dally, dyad, year, defense))#neutrality, nonaggression, entente
+ddy <- left_join(ddy, dmiddy)
+ddy <- left_join(ddy, icow_part_dyr)
+ddy <- left_join(ddy, triv)
+# Full joins are unnecessary - merging to trade data - lags of this are going to mean that I lose all of the first observations - so losing lags for that first var doesn't matter
 
 ######### Merge dyadic and monadic data ###########
 dat <- left_join(ddy, dmon1)
@@ -274,11 +287,11 @@ dat$lntrdev = dat$ln_trade - dat$mlntrade
 # Dependence on global trade
 # dat$deptot1 = dat$exptot1/dat$gdp1 * 1000000
 # dat$deptot2 = dat$exptot2/dat$gdp2 * 1000000
-dat$deptot1 = (dat$exports1 + dat$imports1) / dat$gdp1
-dat$deptot2 = (dat$exports2 + dat$imports2) /dat$gdp2
+dat$deptot1 = (dat$exports1 + dat$imports1 - dat$trade) / dat$gdp1
+dat$deptot2 = (dat$exports2 + dat$imports2 - dat$trade) /dat$gdp2
 dat$deptotmax = rowMaxs(cbind(dat$deptot1, dat$deptot2))
 dat$ln_deptot1 = ifelse(dat$deptot1 == 0, 0, log(dat$deptot1))
-dat$ln_deptot2 = ifelse(dat$dep_tot2 == 0, 0, log(dat$deptot2))
+dat$ln_deptot2 = ifelse(dat$deptot2 == 0, 0, log(dat$deptot2))
 dat$ln_deptotmax = ifelse(dat$deptotmax == 0, 0, log(dat$deptotmax))
 
 # Dependence on dyadic trade
@@ -303,6 +316,8 @@ dat$dyterrclaim <- ifelse(is.na(dat$dyterrclaim), 0, 1)
 dat$btclaim <- ifelse(is.na(dat$btclaim), 0, 1)
 dat$bmclaim <- ifelse(is.na(dat$bmclaim), 0, 1)
 dat$brclaim <- ifelse(is.na(dat$brclaim), 0, 1)
+dat$fatality <- ifelse(is.na(dat$fatality), 0, dat$fatality)
+dat$trival <- ifelse(is.na(dat$trival), 0, 1)
 
 #dat$cyricowsal <- ifelse(!is.na(dat$cyrsal), dat$cyrsal, 0)
 dat$mainland <- ifelse(!is.na(dat$mainland), 1, 0)
@@ -339,67 +354,9 @@ dat <- dat %>% arrange(dyad, year) %>% mutate(
   lbmclaim = lag(bmclaim),
   lbrclaim = lag(brclaim),
   ldemdy = lag(demdy),
-  ldefense = lag(defense)
+  ldefense = lag(defense), 
+  lfatality = lag(fatality)
 )
-
-termod <- lmer(ln_trade ~ ldyterrclaim + lag_ln_gdp1 + lag_ln_gdp2 + lag_ln_gdpcap1 + lag_ln_gdpcap2 + 
-                 contdir + ldefense + lcaprat + lpol1 * lpol2 + year + y2 + (1 | dyad) + (1 | year),
-               data = dat, 
-               control = lmerControl(optimizer = "optimx", calc.derivs = FALSE,
-                                     optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)
-                                     )
-               )
-# summary(tm1);r.squaredGLMM(tm1) #  .662/.93 lndymid
-# marmod <- lmer(ln_trade ~ lbmclaim + lag_ln_gdp1 + lag_ln_gdp2 + lag_ln_gdpcap1 + lag_ln_gdpcap2 + 
-#                  contdir + ldefense + lcaprat + lpol1 * lpol2 + year + y2 + (1 | dyad) + (1 | year), data = dat, 
-#                control = lmerControl(optimizer = "optimx", calc.derivs = FALSE,
-#                                      optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
-# rivmod <- lmer(ln_trade ~ lbrclaim + lag_ln_gdp1 + lag_ln_gdp2 + lag_ln_gdpcap1 + lag_ln_gdpcap2 + 
-#                  contdir + ldefense + lcaprat + lpol1 * lpol2 + year + y2 + (1 | dyad) + (1 | year), data = dat, 
-#                control = lmerControl(optimizer = "optimx", calc.derivs = FALSE,
-#                                      optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
-
-dsim <- dat
-dsim$ldyterrclaim <- 0
-dsim$lbrclaim <- 0
-dsim$lmclaim <- 0
-dat$tsim <- predict(termod, dsim, allow.new.levels = T)
-# dat$msim <- predict(marmod, dsim, allow.new.levels = T)
-# dat$rsim <- predict(rivmod, dsim, allow.new.levels = T)
-
-#dat$trsim1 <- predict(tm1, dsim1, allow.new.levels = T)
-#dat$ugtpred <- trsim0 - trsim1
-# dat$dyugt  <- dat$trsim0 - dat$ln_trade #doesn't look great
-dat$terugt <- dat$tsim - dat$ln_trade
-# dat$marugt <- dat$msim - dat$ln_trade
-# dat$rivugt <- dat$rsim - dat$ln_trade
-# dat$ugdep1  <- dat$ugt/dat$gdp1 * 100000
-# dat$ugdep2 <- dat$ugt/dat$gdp2 * 100000
-# dat$ugdept <- dat$ugt/dat$gdpt * 100000
-# dat$ugtdivtr1 <- dat$ugt/dat$sflow2
-# dat$ugtdivtr2 <- dat$ugt/dat$sflow1
-# dat$totugt <- dat$terugt + dat$marugt + dat$rivugt
-
-# sum(!is.na(dat[dat$ldyterrclaim == 1, "ugt"]))
-# sum(!is.na(icow_cyr_part_out[icow_cyr_part_out$ldyterrclaim == 1, "ugt"]))
-
-dat$terugtdep1 <- dat$terugt / dat$ln_gdp1
-dat$terugtdep2 <- dat$terugt / dat$ln_gdp2
-dat$terugtdepmax <- rowMaxs(cbind(dat$terugtdep1, dat$terugtdep2))
-
-dat <- dat %>% arrange(dyad, year) %>% mutate(
-  lterugt = lag(terugt),
-  lterugtdep1 = lag(terugtdep1),
-  lterugtdep2 = lag(terugtdep2),
-  lterugtdepmax = lag(terugtdepmax)
-  # lmarugt = lag(marugt), 
-  # lrivugt = lag(rivugt),
-  # ltotugt = lag(totugt),
-  # lugdep1 = lag(ugdep1),
-  # lugdep2 = lag(ugdep2),
-  # lugdept = lag(ugdept),
-  # lugtdivtr1 = lag(ugtdivtr1),
-  # lugtdivtr2 = lag(ugtdivtr2)
-)
+#> with(dat, cor(cbind(ldyterrclaim, lag_ln_gdp1, lag_ln_gdp2, lag_ln_gdpcap1, lag_ln_gdpcap2, contdir, ldefense, lcaprat, lpol1, lpol2, year, y2), use = "complete.obs"))
 
 # write_csv(dat, "./data/TradeInputs.csv")
