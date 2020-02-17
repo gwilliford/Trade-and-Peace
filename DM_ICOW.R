@@ -6,24 +6,55 @@ library(dplyr)
 library(tibble)
 
 if(!exists("dat")) dat <- load("./data/TradeOut.Rdata")
+dat$tsim <- tsim
+dat$msim <- msim
+dat$rsim <- rsim
 
-##### Predicted trade values
-  dat$terugt <- dat$tsim - dat$ln_trade
-  dat$marugt <- dat$msim - dat$ln_trade
-  dat$rivugt <- dat$rsim - dat$ln_trade
-  
-  # sum(!is.na(dat[dat$ldyterrclaim == 1, "ugt"]))
-  # sum(!is.na(icow_cyr_part_out[icow_cyr_part_out$ldyterrclaim == 1, "ugt"]))
-  
-  dat$terugtdep1 <- dat$terugt / dat$ln_gdp1
-  dat$terugtdep2 <- dat$terugt / dat$ln_gdp2
-  dat$terugtdepmax <- rowMaxs(cbind(dat$terugtdep1, dat$terugtdep2))
-  dat$rivugtdep1 <- dat$terugt / dat$ln_gdp1
-  dat$rivugtdep2 <- dat$terugt / dat$ln_gdp2
-  dat$rivugtdepmax <- rowMaxs(cbind(dat$rivugtdep1, dat$rivugtdep2))
-  dat$marugtdep1 <- dat$terugt / dat$ln_gdp1
-  dat$marugtdep2 <- dat$terugt / dat$ln_gdp2
-  dat$marugtdepmax <- rowMaxs(cbind(dat$marugtdep1, dat$marugtdep2))
+dat$terugt <- dat$tsim - dat$ln_trade
+dat$marugt <- dat$msim - dat$ln_trade
+dat$rivugt <- dat$rsim - dat$ln_trade
+dat$terugtdep1 <- dat$terugt / dat$ln_gdp1
+dat$terugtdep2 <- dat$terugt / dat$ln_gdp2
+dat$terugtdepmax <- rowMaxs(cbind(dat$terugtdep1, dat$terugtdep2))
+dat$rivugtdep1 <- dat$terugt / dat$ln_gdp1
+dat$rivugtdep2 <- dat$terugt / dat$ln_gdp2
+dat$rivugtdepmax <- rowMaxs(cbind(dat$rivugtdep1, dat$rivugtdep2))
+dat$marugtdep1 <- dat$terugt / dat$ln_gdp1
+dat$marugtdep2 <- dat$terugt / dat$ln_gdp2
+dat$marugtdepmax <- rowMaxs(cbind(dat$marugtdep1, dat$marugtdep2))
+
+dat <- dat %>% arrange(dyad, year) %>% mutate(
+  lterugt = lag(terugt),
+  lterugtdep1 = lag(terugtdep1),
+  lterugtdep2 = lag(terugtdep2),
+  lterugtdepmax = lag(terugtdepmax),
+  lrivugt = lag(rivugt),
+  lrivugtdep1 = lag(rivugtdep1),
+  lrivugtdep2 = lag(rivugtdep2),
+  lrivugtdepmax = lag(rivugtdepmax),
+  lmarugt = lag(marugt),
+  lmarugtdep1 = lag(marugtdep1),
+  lmarugtdep2 = lag(marugtdep2),
+  lmarugtdepmax = lag(marugtdepmax)
+)
+
+# ##### Predicted trade values
+#   dat$terugt <- dat$tsim - dat$ln_trade
+#   dat$marugt <- dat$msim - dat$ln_trade
+#   dat$rivugt <- dat$rsim - dat$ln_trade
+#   
+#   # sum(!is.na(dat[dat$ldyterrclaim == 1, "ugt"]))
+#   # sum(!is.na(icow_cyr_part_out[icow_cyr_part_out$ldyterrclaim == 1, "ugt"]))
+#   
+#   dat$terugtdep1 <- dat$terugt / dat$ln_gdp1
+#   dat$terugtdep2 <- dat$terugt / dat$ln_gdp2
+#   dat$terugtdepmax <- rowMaxs(cbind(dat$terugtdep1, dat$terugtdep2))
+#   dat$rivugtdep1 <- dat$terugt / dat$ln_gdp1
+#   dat$rivugtdep2 <- dat$terugt / dat$ln_gdp2
+#   dat$rivugtdepmax <- rowMaxs(cbind(dat$rivugtdep1, dat$rivugtdep2))
+#   dat$marugtdep1 <- dat$terugt / dat$ln_gdp1
+#   dat$marugtdep2 <- dat$terugt / dat$ln_gdp2
+#   dat$marugtdepmax <- rowMaxs(cbind(dat$marugtdep1, dat$marugtdep2))
 
 ##### ICOW settlement data
 icow_set <- read_dta("./data/ICOWsettle.dta")
@@ -46,7 +77,6 @@ icow_set_col$bagreeiss <- ifelse(icow_set_col$sagreeiss > 0, 1, 0)
 icow_set$ag_end_any  <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 1:2, 1, 0)
 icow_set$ag_end_part <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 1, 1, 0)
 icow_set$ag_end_full <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 2, 1, 0)
-icow_set$concany <- ifelse(is.naicow_set$concany, 0, 1)
 
 ##### ICOW aggregate claim data 
 icow_claimdy <- read_dta("./data/ICOWclaimdy.dta")
