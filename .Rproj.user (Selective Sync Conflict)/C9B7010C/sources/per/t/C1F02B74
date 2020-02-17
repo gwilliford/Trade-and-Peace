@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1580812274680.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "4088886841",
+    "id" : "C1F02B74",
+    "lastKnownWriteTime" : 1580816737,
+    "last_content_update" : 1580816737687,
+    "path" : "C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis/DM_ICOW.R",
+    "project_path" : "DM_ICOW.R",
+    "properties" : {
+        "cursorPosition" : "231,2",
+        "scrollLine" : "76"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

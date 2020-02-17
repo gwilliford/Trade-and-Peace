@@ -1,0 +1,160 @@
+library(readr)
+library(brms)
+library(brglm)
+
+if(!exists("icow_part_cyr_ct")) icow_part_cyr_ct <- read_csv("./data/icow_part_cyr_ct.csv")
+
+
+a <- icow_full_cyr %>% filter((chal == 651 & tgt == 666) | (chal == 666 & tgt == 651))
+summary(a$year)
+
+
+icow_part_cyr_ct
+
+att_dy <- brglm(attanyp ~ lterugtdepmax + lag_ln_trade + lag_ln_deptotmax + 
+                lag_ln_gdp_chal + lag_ln_gdp_tgt + lag_ln_gdpcap_chal + lag_ln_gdpcap_tgt + 
+                lpol_chal  * lpol_tgt +
+                icowsal + 
+                recnowt + recyeswt + recmidwt +
+                lcaprat + ldefense + contdir + 
+                year,
+              data = icow_part_cyr_ct); summary(att_dy)
+
+att_dy <- brglm(agreeiss ~ lterugtdepmax + lag_ln_trade + lag_ln_deptot_chal + lag_ln_deptot_tgt + 
+                  lag_ln_gdp_chal + lag_ln_gdp_tgt + lag_ln_gdpcap_chal + lag_ln_gdpcap_tgt + 
+                  W_chal  * W_tgt +
+                  icowsal + 
+                  recnowt + recyeswt + recmidwt +
+                  lcaprat + ldefense + contdir,
+                data = icow_part_cyr_ct); summary(att_dy)
+
+# att_dy <- brglm(concany ~ lterugtdepmax + lag_ln_trade + lag_ln_deptotmax + 
+#                   lag_gdp_chal + lag_gdp_tgt + lag_gdpcap_chal + lag_gdpcap_tgt + 
+#                   lpol_chal  * lpol_tgt +
+#                   icowsal + 
+#                   recnowt + recyeswt + recmidwt +
+#                   lcaprat + ldefense + contdir + 
+#                   year,
+#                 data = icow_part_cyr_ct); summary(att_dy)
+
+# att_dy <- brglm(concchal ~ lterugtdep_chal + lterugtdep_tgt + lag_ln_trade + lag_ln_deptot_chal + lag_ln_deptot_tgt +
+#                   lag_gdp_chal + lag_gdp_tgt + lag_gdpcap_chal + lag_gdpcap_tgt + 
+#                   lpol_chal  * lpol_tgt +
+#                   icowsal + 
+#                   recnowt + recyeswt + recmidwt +
+#                   lcaprat + ldefense + contdir + 
+#                   year,
+#                 data = icow_part_cyr_ct); summary(att_dy)
+
+# att_dy <- brglm(conctgt ~ lterugtdep_chal + lterugtdep_tgt + lag_ln_trade + lag_ln_deptot_chal + lag_ln_deptot_tgt +
+#                   lag_gdp_chal + lag_gdp_tgt + lag_gdpcap_chal + lag_gdpcap_tgt + 
+#                   lpol_chal  * lpol_tgt +
+#                   icowsal + 
+#                   recnowt + recyeswt + recmidwt +
+#                   lcaprat + ldefense + contdir + 
+#                   year,
+#                 data = icow_part_cyr_ct); summary(att_dy)
+
+              #family = binomial); summary(att_dy)
+att_dy <- brglm(attanyp ~ lterugdep_max + lag_ln_trade +
+                  ldep_totmax + 
+                  lag_gdp_chal + lag_gdp_tgt + lag_gdpcap_chal + lag_gdpcap_tgt + 
+                  lpol_chal  * lpol_tgt +
+                  icowsal + 
+                  recnowt + recyeswt + recmidwt +
+                  lcaprat + ldefense + contdir + 
+                  year,
+                data = icow_part_cyr_ct); summary(att_dy)
+#family = binomial); summary(att_dy)
+
+
+### For some reason chal/tgt data has different results when using 1 and 2 and chal and tgt, and 1 and 2 differ from original file
+# Chal/tgt is actually dropping less observations
+# Dyadic: Unrealized gains from trade
+
+
+att_dy <- brglm::brglm(attanyp ~ lrivugt + ln_trade + lag_ln_dep_dy_chal + lag_ln_dep_dy_tgt + lag_ln_dep_tot_chal + lag_ln_dep_tot_tgt +
+                lag_ln_gdp_chal + lag_ln_gdp_chal + lag_ln_gdpcap_tgt + lag_ln_gdpcap_tgt + 
+                lpol_chal * lpol_tgt +
+                icowsal + 
+                recnowt + recyeswt + recmidwt +
+                lcaprat + ldefense + contdir,
+              data = icow_part_cyr_ct,
+              family = binomial); summary(att_dy)
+
+att_dy <- brglm::brglm(attanyp ~ ltotugt + lag_ln_trade + lag_ln_dep_dy_chal + lag_ln_dep_dy_tgt + lag_ln_dep_tot_chal + lag_ln_dep_tot_tgt +
+                         lag_ln_gdp_chal + lag_ln_gdp_tgt + lag_ln_gdpcap_chal + lag_ln_gdpcap_tgt + 
+                         lpol_chal * lpol_tgt +
+                         icowsal + 
+                         recnowt + recyeswt + recmidwt +
+                         lcaprat + ldefense + contdir,
+                       data = icow_part_cyr_ct,
+                       family = binomial); summary(att_dy)
+att_dy <- MASS::glm.nb(attanyp ~ ltotugt + lag_ln_trade + lag_ln_dep_dy_chal + lag_ln_dep_dy_tgt + lag_ln_dep_tot_chal + lag_ln_dep_tot_tgt +
+                         lag_ln_gdp_chal + lag_ln_gdp_tgt + lag_ln_gdpcap_chal + lag_ln_gdpcap_tgt + 
+                         lpol_chal * lpol_tgt +
+                         icowsal + 
+                         recnowt + recyeswt + recmidwt +
+                         lcaprat + ldefense + contdir,
+                       data = icow_part_cyr_ct); summary(att_dy)
+
+
+att_dy <- glm(attanyp ~ lugt + ln_trade + lag_ln_dep_dy1 + lag_ln_dep_dy2 + lag_ln_dep_tot1 + lag_ln_dep_tot2 + lugt * salintc +
+                   lag_ln_gdp1 + lag_ln_gdp2 + lag_ln_gdpcap1 + lag_ln_gdpcap2 + 
+                   polity21 * polity22 +
+                   icowsal + 
+                   recnowt + recyeswt + recmidwt +
+                   lcaprat + ldefense + contdir,
+                 data = icow_part_cyr,
+                 family = binomial); summary(att_dy)
+
+att_dy_b <- brm(attanyp ~ lugt + ln_trade + lag_ln_dep_dy1 + lag_ln_dep_dy2 + lag_ln_dep_tot1 + lag_ln_dep_tot2 + 
+                         lag_ln_gdp1 + lag_ln_gdp2 + lag_ln_gdpcap1 + lag_ln_gdpcap2 + 
+                         polity21 * polity22 +
+                         icowsal + 
+                         recnowt + recyeswt + recmidwt +
+                         lcaprat + ldefense + contdir + 
+                        (1 | mm(ccode1, ccode2)),
+                       data = icow_part_cyr, cores = 4,
+                      family = "bernoulli")
+
+# Unrealized gains from trade dependence
+# att_dy <- brglm::brglm(attanyp ~ lugt + ln_trade + lag_ln_dep_dy1 + lag_ln_dep_dy2 + lag_ln_dep_tot1 + lag_ln_dep_tot2 + 
+#                          lag_1 + lag_2 + lag_cap1 + lag_cap2 + 
+#                          polity21 * polity22 +
+#                          icowsal + 
+#                          recnowt + recyeswt + recmidwt +
+#                          lcaprat + ldefense + contdir,
+#                        data = icow_part_cyr,
+#                        family = binomial); summary(att_dy)
+
+# Dyadic: Actual Trade
+att_dy <- glm(attanyp ~ ln_trade + lag_ln_dep_dy1 + lag_ln_dep_dy2 + lag_ln_dep_tot1 + lag_ln_dep_tot2 + 
+                lag_1 + lag_2 + lag_cap1 + lag_cap2 + 
+                lpol1 * lpol2 +
+                icowsal + 
+                recnowt + recyeswt + recmidwt +
+                lcaprat + ldefense + contdir,
+              data = icow_part_cyr,
+              family = binomial); summary(att_dy)
+
+# Dyadic: Trade dependence
+att_dy <- glm(attanyp ~ ln_trade + lag_ln_dep_dy1 + lag_ln_dep_dy2 + 
+                lag_1 + lag_2 + lag_cap1 + lag_cap2 + 
+                polity21 * polity22 +
+                icowsal + 
+                recnowt + recyeswt + recmidwt +
+                lcaprat + ldefense + contdir,
+              data = icow_part_cyr,
+              family = binomial); summary(att_dy)
+
+
+# Systemic: Trade dependence
+att_dy <- glm(attanyp ~ ln_trade + lag_ln_dep_tot1 + lag_ln_dep_tot2 + 
+                lag_1 + lag_2 + lag_cap1 + lag_cap2 + 
+                polity21 * polity22 +
+                icowsal + 
+                recnowt + recyeswt + recmidwt +
+                lcaprat + ldefense + contdir,
+              data = icow_part_cyr,
+              family = binomial); summary(att_dy)

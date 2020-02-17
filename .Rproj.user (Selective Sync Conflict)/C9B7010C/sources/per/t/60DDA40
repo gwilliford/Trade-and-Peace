@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1580814128004.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3980056019",
+    "id" : "60DDA40",
+    "lastKnownWriteTime" : 1580816737,
+    "last_content_update" : 1580816737803,
+    "path" : "C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis/DM_MaddisonCleaning.R",
+    "project_path" : "DM_MaddisonCleaning.R",
+    "properties" : {
+        "cursorPosition" : "147,0",
+        "scrollLine" : "0"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

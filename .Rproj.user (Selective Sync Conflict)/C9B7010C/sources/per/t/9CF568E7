@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1580812422022.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2416430890",
+    "id" : "9CF568E7",
+    "lastKnownWriteTime" : 1580816737,
+    "last_content_update" : 1580816737883,
+    "path" : "C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis/Analysis_Agreements_Logits_cyr.R",
+    "project_path" : "Analysis_Agreements_Logits_cyr.R",
+    "properties" : {
+        "cursorPosition" : "41,17",
+        "scrollLine" : "32"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1580999029926.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1124046403",
+    "id" : "FEF4775F",
+    "lastKnownWriteTime" : 1581012798,
+    "last_content_update" : 1581012798678,
+    "path" : "C:/Users/gwill/Dropbox/Research/Journal Reviews/Dissertation/Data Analysis/Analysis_Agreements_Logits_cyr.R",
+    "project_path" : "Analysis_Agreements_Logits_cyr.R",
+    "properties" : {
+        "cursorPosition" : "19,21",
+        "scrollLine" : "40"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
