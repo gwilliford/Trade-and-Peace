@@ -109,13 +109,16 @@ madd[madd$country == "Serbia", "ccode"] <- 345
   # RUS = Russian federation - data available from 1960-2016
   # SUN = Former USSR - data available from 1885-2016
   # *** COding complete, although I'm not sure this is the correct way to do this
-  rus <- madd[madd$countrycode == "RUS" | madd$countrycode == "SUN", c("countrycode", "year", "rgdpnapc", "cgdppc", "pop", "gdp")]
-  rus$ccode <- NA
-  rus$ccode[rus$year < 1960] <- 365
-  rus$ccode[rus$year >= 1960] <- 365
-  rus <- rus[rus$ccode == 365, ]
-  madd <- madd[madd$countrycode != "RUS" & madd$countrycode != "SUN", ]
-  madd <- full_join(madd, rus)
+  # rus <- madd[madd$countrycode == "RUS" | madd$countrycode == "SUN",]# c("countrycode", "year", "rgdpnapc", "cgdppc", "pop", "gdp")]
+  # rus$ccode <- NA
+  # rus$ccode[rus$year < 1960 & rus$countrycode == "RUS"] <- 365
+  # rus$ccode[rus$year >= 1960] <- 365
+  # rus[rus$ccode == 365, ]
+  # rus <- rus[rus$countrycode == "RUS", ]
+  madd <- filter(madd, countrycode != "RUS")
+  # madd <- filter(madd, countrycode != "SUN", countrycode != "RUS")
+  #madd <- madd[madd$countrycode != "RUS" & madd$countrycode != "SUN", ]
+ # madd <- full_join(madd, rus)
   
 # Yemen
   # Maddison only contains one entry for Yemen (from 1950-2016)
@@ -143,5 +146,5 @@ madd[madd$country == "Serbia", "ccode"] <- 345
   # ccode 300 gets sum of austria and hungary for years less than 1919
   # *** 305 and 310 already coded - assign 300 sum of two
   # no data on auh
-madd <- dplyr::select(madd, ccode, year, gdp, rgdpnapc, pop) %>% rename(gdpcap = rgdpnapc)
+madd <- dplyr::select(madd, ccode, year, gdp, rgdpnapc, pop) %>% rename(gdpcap = rgdpnapc) %>% filter(!is.na(ccode))
 write_csv(madd, "./data/madd.csv")
