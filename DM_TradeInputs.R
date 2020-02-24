@@ -37,8 +37,8 @@ dtrade$dyad = undirdyads(dtrade, ccode1, ccode2)
 dtrade$flow1 <- ifelse(dtrade$flow1 < 0, NA, dtrade$flow1)
 dtrade$flow2 <- ifelse(dtrade$flow2 < 0, NA, dtrade$flow2)
 dtrade$smoothtotrade <- ifelse(dtrade$smoothtotrade < 0, NA, dtrade$smoothtotrade)
-dtrade$flow1 <- dtrade$flow1# * 1000000
-dtrade$flow2 <- dtrade$flow2# * 1000000
+dtrade$flow1 <- dtrade$flow1 * 1000000
+dtrade$flow2 <- dtrade$flow2 * 1000000
 # dtrade$smoothtotrade <- dtrade$smoothtotrade# * 1000000
 ### Total global trade for each country-year
 # Barbieri in millions of dollars
@@ -63,8 +63,8 @@ dtrade$flow2 <- dtrade$flow2# * 1000000
 # ) %>% select(ccode, year, imptot, exptot, aggtot)
 # dtradea$lnagg <- ifelse(dtradea$aggtot == 0, 0, log(dtradea$aggtot))
 mtrade <- read_csv('./data/National_COW_4.0.csv')
-mtrade$imports <- mtrade$imports #* 1000000
-mtrade$exports <- mtrade$exports #* 1000000
+mtrade$imports <- mtrade$imports * 1000000
+mtrade$exports <- mtrade$exports * 1000000
 mtrade$agg <- mtrade$imports + mtrade$exports
 
 ### ICOW global territory claim year data
@@ -159,7 +159,7 @@ ead <- read_dta("./data/EAD+2.0+Annual+0101019.dta")
 ### Merge Monadic Data
 dmon = full_join(madd, dcap)
 dmon = full_join(dmon, select(dpol, ccode, year, polity2))
-dmon = full_join(dmon, dw)
+dmon = full_join(dmon, filter(dw, !is.na(ccode)))
 dmon = full_join(dmon, chisols)
 #dmon = full_join(dmon, dtradea)
 # dmon = full_join(dmon, mtrade)
@@ -289,13 +289,11 @@ dat$trdev = dat$trade - dat$mtrade
 dat$lntrdev = dat$ln_trade - dat$mlntrade
 
 # Dependence on global trade
-# dat$deptot1 = dat$exptot1/dat$gdp1 * 1000000
-# dat$deptot2 = dat$exptot2/dat$gdp2 * 1000000
-dat$deptot1 = (dat$exports1 + dat$imports1) / dat$gdp1
-dat$deptot2 = (dat$exports2 + dat$imports2) /dat$gdp2
+dat$deptot1 = (dat$exports1 + dat$imports1) / (dat$gdp1)# * 1000000)
+dat$deptot2 = (dat$exports2 + dat$imports2) /(dat$gdp2)#* 1000000)
 dat$deptotmax = rowMaxs(cbind(dat$deptot1, dat$deptot2))
-dat$depoth1 = (dat$exports1 + dat$imports1 - dat$trade) / dat$gdp1
-dat$depoth2 = (dat$exports2 + dat$imports2 - dat$trade) /dat$gdp2
+dat$depoth1 = (dat$exports1 + dat$imports1 - dat$trade) / (dat$gdp1)# * 1000000)
+dat$depoth2 = (dat$exports2 + dat$imports2 - dat$trade) /(dat$gdp2)# * 1000000)
 dat$depothmax = rowMaxs(cbind(dat$depoth1, dat$depoth2))
 dat$ln_deptot1 = ifelse(dat$deptot1 == 0, 0, log(dat$deptot1))
 dat$ln_deptot2 = ifelse(dat$deptot2 == 0, 0, log(dat$deptot2))
@@ -317,6 +315,13 @@ dat$gdpt = dat$gdp1 + dat$gdp2
 dat$lngdpt = log(dat$gdpt)
 dat$gdpcapt = dat$gdpcap1 + dat$gdpcap2
 dat$lngdpcapt = log(dat$gdpcapt)
+dat$gdp_min = rowMins(cbind(dat$gdp1, dat$gdp2))
+dat$gdp_max = rowMaxs(cbind(dat$gdp1, dat$gdp2))
+dat$ln_gdp_min = rowMins(cbind(dat$ln_gdp1, dat$ln_gdp2))
+dat$ln_gdp_max = rowMaxs(cbind(dat$ln_gdp1, dat$ln_gdp2))
+dat$ln_gdpcap_min = rowMins(cbind(dat$ln_gdpcap1, dat$ln_gdpcap2))
+dat$ln_gdpcap_max = rowMaxs(cbind(dat$ln_gdpcap1, dat$ln_gdpcap2))
+
 
 # Other dyadic variables
 dat$lnccdist <- ifelse(dat$ccdistance == 0, 0, log(dat$ccdistance))
@@ -342,6 +347,8 @@ dat$demdy <- ifelse(dat$polity21 > 5 & dat$polity22 > 5, 1, 0)
 dat$autdy <- ifelse(dat$polity21 < -5 & dat$polity22 < -5, 1, 0)
 dat$y2 = (dat$year^2) / 1000
 dat$y3 = (dat$year^3) / 1000
+dat$Wmin = rowMins(cbind(dat$w1, dat$W2))
+dat$Wmax = rowMaxs(cbind(dat$W1, dat$W2))
 
 # Lags
 dat <- dat %>% arrange(dyad, year) %>% mutate(
@@ -349,6 +356,10 @@ dat <- dat %>% arrange(dyad, year) %>% mutate(
   lag_ln_caprat = lag(ln_caprat),
   lgdpcapt = lag(gdpcapt),
   lag_ln_gdpcapt = lag(lngdpcapt),
+  lag_ln_gdp_min = lag(ln_gdp_min),
+  lag_ln_gdp_max = lag(ln_gdp_max),
+  lag_ln_gdpcap_min = lag(ln_gdpcap_min),
+  lag_ln_gdpcap_max = lag(ln_gdpcap_max),
   lag_trade = lag(trade),
   lag_ln_trade = lag(ln_trade),
   lag_deptot1 = lag(deptot1),
@@ -389,8 +400,8 @@ dat <- dat %>% arrange(dyad, year) %>% mutate(
 # teuro <- icow_part_cyr[icow_part_cyr$region == 2, "tgt"]
 # aeuro <- unlist(c(ceuro, teuro))
 # sort(unique(aeuro))
-dat$sub <- ifelse(dat$ccode1 %in% 1:399 | dat$ccode2 %in% 1:399, 1, 0)
-dat$subr <- ifelse(dat$ccode1 %in% c(1:399, 600:699) | dat$ccode2 %in% c(1:399, 600:699), 1, 0)
+dat$sub  <- ifelse(dat$ccode1 %in% 1:330 | dat$ccode2 %in% 1:330, 1, 0)
+dat$subr <- ifelse(dat$ccode1 %in% c(1:330, 600:699) | dat$ccode2 %in% c(1:330, 600:699), 1, 0)
 
 # # Visualize trade
 # library(lattice)
