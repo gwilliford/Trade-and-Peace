@@ -6,23 +6,6 @@ options(scipen = 999)
 if(!exists("icow_part_cyr_ct")) icow_part_cyr_ct <- read_csv("./data/icow_part_cyr_ct.csv")
 cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
 
-# Looking for positive coefficients on the probability eq
-# Looking for positive coefficients on the hazard eq
-##### Bargaining/Self-enforcing agreements
-# Information
-  # Capability ratio
-  # Last Battle Fatalities
-  # Recent MIDs
-  # Recagree - signals willingness to compromise
-# Commitment Problems
-  # Recagree - builds trust - mitigates domestic opposition
-# Opportunity Costs
-  # Foregone trade
-  # Trade
-  # Total Trade Dependence
-  # Alliance
-# Domestic Variables
-  # W / Regime Type
 
 # m <- tvcure(Surv(y0, year, agreeiss) ~ lterugtdepmax + lag_ln_trade + 
 #               + lag_ln_gdp_chal + lag_ln_gdp_tgt + 

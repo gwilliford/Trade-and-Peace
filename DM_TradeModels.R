@@ -8,7 +8,7 @@ if(!exists("dat")) dat <- read_csv("./data/TradeInputs.csv")
 #                data = dat, 
 #                control = lmerControl(optimizer = "optimx", calc.derivs = FALSE,
 #                                      optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)));summary(termod)
-# termod <- lmer(ln_trade ~ ldyterrclaim + lag_ln_gdp1 + lag_ln_gdp2 + lag_ln_gdpcap1 + lag_ln_gdpcap2 + 
+# termod <- lmer(ln_trade ~ ldyterrclaim + lag_ln_gdp1 + lag_ln_gdp2 +QA lag_ln_gdpcap1 + lag_ln_gdpcap2 + 
 #                  contdir + ldefense + lcaprat + lpol1 * lpol2 + year + y2 + (1 | dyad) + (1 | year),
 #                data = dat, subset = dat$sub == 1,
 #                control = lmerControl(optimizer = "optimx", calc.derivs = FALSE,
@@ -19,19 +19,19 @@ if(!exists("dat")) dat <- read_csv("./data/TradeInputs.csv")
 # #                data = dat, subset = dat$btclaim == 1,
 # #                control = lmerControl(optimizer = "optimx", calc.derivs = FALSE,
 # #                                      optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
-termod <- lmer(ln_trade ~ lbtclaim + lag_ln_gdp1 + lag_ln_gdp2 + lag_ln_gdpcap1 + lag_ln_gdpcap2 +
-                 contdir + ldefense + lcaprat + lpol1 * lpol2 + year + y2 + (1 | dyad) + (1 | year),
-               data = dat,
+termod <- lmer(ln_trade ~ lbtclaim + lag_ln_gdp_min + lag_ln_gdp_max + lag_ln_gdpcap_min + lag_ln_gdpcap_max +
+                 contdir + ldefense + lcaprat + Wmin + Wmax + year + y2 + (1 | dyad) + (1 | year),
+               data = dat, subset = dat$sub & dat$year >= 1870,
                control = lmerControl(optimizer = "optimx", calc.derivs = FALSE,
                                      optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE))); summary(termod)
 rivmod <- lmer(ln_trade ~ lbrclaim + lag_ln_gdp1 + lag_ln_gdp2 + lag_ln_gdpcap1 + lag_ln_gdpcap2 +
                  contdir + ldefense + lcaprat + lpol1 * lpol2 + year + y2 + (1 | dyad) + (1 | year),
-               data = dat, subset = dat$subr==1 & dat$year > 1900,
+               data = dat, subset = dat$subr==1 & dat$year >= 1900,
                control = lmerControl(optimizer = "optimx", calc.derivs = FALSE,
                                      optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE))); summary(rivmod)
 marmod <- lmer(ln_trade ~ lbmclaim + lag_ln_gdp1 + lag_ln_gdp2 + lag_ln_gdpcap1 + lag_ln_gdpcap2 +
                  contdir + ldefense + lcaprat + lpol1 * lpol2 + year + y2 + (1 | dyad) + (1 | year),
-               data = dat, subset = dat$sub & dat$year > 1900,
+               data = dat, subset = dat$sub & dat$year >= 1900,
                control = lmerControl(optimizer = "optimx", calc.derivs = FALSE,
                                      optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE))); summary(marmod)
 
@@ -54,6 +54,15 @@ dat$tsim <- tsim
 dat$msim <- msim
 dat$rsim <- rsim
 
+
+# dsim2 <- dsim
+# dsim2$lntclaim <- max(dat$lntclaim)
+# dsim2$lnrclaim <- max(dat$lnrclaim)
+# dsim2$lnmclaim <- max(dat$lnmclaim)
+# tsim2 <- predict(termod, dsim2, allow.new.levels = T)
+# msim2 <- predict(marmod, dsim2, allow.new.levels = T)
+# rsim2 <- predict(rivmod, dsim2, allow.new.levels = T)
+
 #dat$trsim1 <- predict(tm1, dsim1, allow.new.levels = T)
 #dat$ugtpred <- trsim0 - trsim1
 # dat$dyugt  <- dat$trsim0 - dat$ln_trade #doesn't look great
@@ -68,8 +77,6 @@ dat$rsim <- rsim
 # dat$marugtdep1 <- dat$marugt / dat$ln_gdp1
 # dat$marugtdep2 <- dat$marugt / dat$ln_gdp2
 # dat$marugtdepmax <- rowMaxs(cbind(dat$marugtdep1, dat$marugtdep2))
-# 
-# 
 # dat <- dat %>% arrange(dyad, year) %>% mutate(
 #   lterugt = lag(terugt),
 #   lterugtdep1 = lag(terugtdep1),
@@ -88,7 +95,6 @@ dat$rsim <- rsim
 # save.image("./data/TradeOut.Rdata")
 
 
-# # 
 # library(dynpanel)
 # dat2 <- na.omit(dat %>% select(ln_trade, ldyterrclaim, gdp1, gdp2, dyad, year))
 # 
@@ -102,4 +108,3 @@ dat$rsim <- rsim
 # a <- lmer(lntrade ~ ldyterrclaim + lag_ln_gdp1 + lag_ln_gdp2 + lag_ln_gdpcap1 + lag_ln_gdpcap2 + 
 #                  contdir + ldefense + lcaprat + lpol1 * lpol2 + year + y2 + (1 | dyad) + (1 | year), data = dat, 
 #                control = lmerControl(optimizer = "optimx", calc.derivs = FALSE, optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
-# 
