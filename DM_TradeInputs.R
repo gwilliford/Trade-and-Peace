@@ -67,32 +67,6 @@ icow_part_dyr <- ungroup(icow_part_cyr %>% group_by(dyad, year) %>% summarize(
   anyclaim = 1
 ))
 
-### ICOW country year summary
-icow_country1 = icow_full_cyr %>%
-  group_by(ccode1, year) %>%
-  summarize(
-    nterrclaim1 = sum(tclaim),
-    bterrclaim1 = 1,
-    salmax1 = max(icowsal),
-  ) %>% 
-  rename(ccode = ccode1)
-
-icow_country2 = icow_full_cyr %>%
-  group_by(ccode2, year) %>%
-  summarize(
-    nterrclaim2 = sum(tclaim),
-    bterrclaim2 = 1,
-    salmax = max(icowsal),
-  ) %>%
-  rename(ccode = ccode2)
-
-icow_countrya <- full_join(icow_country1, icow_country2) %>%
-  mutate(
-  nterrclaim = nterrclaim1 + nterrclaim2,
-  bterrclaim = bterrclaim1 + bterrclaim2,
-  salmaxt = rowMaxs(cbind(salmax1, salmax2))
-)
-
 ### Gibler MID data
 dmid <- read_csv("./data/gml-ndy-disputes-2.0.csv")
 dmid$dyad <- undirdyads(dmid, ccode1, ccode2)
