@@ -98,33 +98,40 @@ dmon1 = dmon %>% select(-"version") %>% setNames(paste0(names(.), "1")) %>% rena
 dmon2 = dmon %>% select(-"version") %>% setNames(paste0(names(.), "2")) %>% rename(year = year2)
 
 ########### DYADIC DATA ##########
-
-### Import igo data
-igo <- read_dta("./data/igocount.dta")
-
-### Distance and contiguity data
-ddist  <- read_csv("./data/COW_Distance_NewGene_Export.csv")
-dcont  <- read_csv("./data/COW_Contiguity_NewGeneExport.csv")
+ddist  <- read_csv("./data/COW_Distance_NewGene_Export.csv") %>%
+  select(ccode1, ccode2, year, ccdistance, mindistance)
+dcont  <- read_csv("./data/COW_Contiguity_NewGeneExport.csv") %>%
+  select(ccode1, ccode2, year, conttype)
 dcont <- dcont[dcont$ccode1 < dcont$ccode2, ]
-
-### Alliance data
+triv <- read_dta("./data/ThompsonDyadYear.dta")
 dally <- read_csv("./data/alliance_v4.1_by_dyad_yearly.csv")
 dally$dyad <- undirdyads(dally, ccode1, ccode2)
-dally <- dally %>% group_by(dyad, year) %>% summarize(
-  defense = sum(defense, na.rm = T)
-)
+dally <- dally %>%
+  group_by(dyad, year) %>%
+  summarize(
+    defense = sum(defense, na.rm = T)
+  ) %>% 
+  select(dyad, year, defense)#neutrality, nonaggression, entente
 
-### Thompson Rivalry Data
-triv <- read_dta("./data/ThompsonDyadYear.dta")
-# triv$trival <- ifelse(is.na(triv$trival), -1, 1)
+dtrade <- read_csv("./data/Dyadic_COW_4.0.csv")
+dtrade$dyad = undirdyads(dtrade, ccode1, ccode2)
+dtrade$flow1 <- ifelse(dtrade$flow1 < 0, NA, dtrade$flow1)
+dtrade$flow2 <- ifelse(dtrade$flow2 < 0, NA, dtrade$flow2)
+dtrade$smoothtotrade <- ifelse(dtrade$smoothtotrade < 0, NA, dtrade$smoothtotrade)# * 1000000
+dtrade$flow1mil <- dtrade$flow1 * 1000000
+dtrade$flow2mil <- dtrade$flow2 * 1000000
+dtrade$smoothtotrademil <- dtrade$smoothtotrade * 1000000
+dtrade <- dtrade %>% select(ccode1, ccode2, dyad, year, flow1, flow2,
+                            smoothflow1, smoothflow2, 
+                            "trade" = "smoothtotrade",
+                            flow1mil, flow2mil, "trademil" = "smoothtotrademil")
 
 ### Merge dyadic data
-ddy <- select(dtrade, ccode1, ccode2, dyad, year, flow1, flow2, smoothflow1, smoothflow2, smoothtotrade, flow1_100, flow2_100, smoothtotrade_100)
-ddy <- left_join(ddy, select(ddist, ccode1, ccode2, year, ccdistance, mindistance))
-ddy <- left_join(ddy, select(dcont, ccode1, ccode2, year, conttype))
-ddy <- left_join(ddy, icow_full_dyr)
-ddy <- left_join(ddy, icow_part_dyr)
-ddy <- left_join(ddy, select(dally, dyad, year, defense))#neutrality, nonaggression, entente
+ddy <- left_join(dtrade, ddist) 
+ddy <- left_join(ddy, dcont)
+# ddy <- left_join(ddy, icow_full_dyr)
+# ddy <- left_join(ddy, icow_part_dyr)
+ddy <- left_join(ddy, dally)
 ddy <- left_join(ddy, dmiddy)
 ddy <- left_join(ddy, triv)
 ddy <- left_join(ddy, igo)
@@ -136,24 +143,23 @@ dat <- left_join(dat, dmon2)
 dat <- rename(dat, 'polity1' = 'polity21', 'polity2' = 'polity22')
 
 # Dyadic trade variables
-dat$trade = dat$smoothtotrade #XXX
-dat$trade_100 = dat$smoothtotrade_100 #XXX
-#dat$trade = dat$flow1 + dat$flow2
 dat$ln_trade = ifelse(dat$trade == 0, 0, log(dat$trade))
-dat$ln_trade_100 = ifelse(dat$trade_100 == 0, 0, log(dat$trade_100))
-# Mean dyadic trade
+dat$ln_trademil = ifelse(dat$trademil == 0, 0, log(dat$trademil))
 dat <- ungroup(dat %>% group_by(dyad) %>% mutate(
   mflow1 = mean(flow1),
   mflow2 = mean(flow2),
   mtrade = mean(trade, na.rm = T),
-  mtrade_100 = mean(trade_100),
-  mlntrade = mean(ln_trade, na.rm = T),
+  mtrademil = mean(trademil),
+  mln_trade = mean(ln_trade, na.rm = T),
+  mln_trademil = mean(ln_trademil, na.rm = T)
 ))
-dat$aggtrademin = rowMins(cbind(dat$agg1, dat$agg2))
+dat$aggtrademin = rowMins(cbind(dat$aggtrade1, dat$aggtrade2))
 
 # Deviations from mean dyadic trade
 dat$trdev = dat$trade - dat$mtrade
-dat$lntrdev = dat$ln_trade - dat$mlntrade
+dat$ln_trdev = dat$ln_trade - dat$mlntrade
+dat$trdevmil = dat$trademil - dat$mtrademil
+dat$ln_trdevmil = dat$ln_trademil - dat$mln_trademil
 
 # Dependence on global trade
 dat$deptot1 = (dat$exports1 + dat$imports1) / (dat$gdp1)
