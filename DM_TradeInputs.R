@@ -323,7 +323,7 @@ dat$Wmax = rowMaxs(cbind(dat$W1, dat$W2))
 dat$govcrisesdy = ifelse(dat$GovCrises1 > 0 | dat$GovCrises2 > 0, 1, 0)
 
 # Lags
-dat <- dat %>% arrange(dyad, year) %>% mutate(
+datlag <- dat %>% arrange(dyad, year) %>% mutate(
   lcaprat = lag(caprat),
   lag_ln_caprat = lag(ln_caprat),
   pchcaprat = lag(caprat) / caprat,
@@ -412,6 +412,9 @@ dat <- dat %>% arrange(dyad, year) %>% mutate(
   lgovcrises2 = lag(GovCrises2),
   lgovcrisesDy = lag(govcrisesdy)
 )
+
+write_rds(dat, "./data/TradeInputs.RDS")
+
 #> with(dat, cor(cbind(ldyterrclaim, lag_ln_gdp1, lag_ln_gdp2, lag_ln_gdpcap1, lag_ln_gdpcap2, contdir, ldefense, lcaprat, lpol1, lpol2, year, y2), use = "complete.obs"))
 # 
 # write_csv(dat, "./data/TradeInputs.csv")
@@ -421,10 +424,10 @@ dat <- dat %>% arrange(dyad, year) %>% mutate(
 # teuro <- icow_part_cyr[icow_part_cyr$region == 2, "tgt"]
 # aeuro <- unlist(c(ceuro, teuro))
 # sort(unique(aeuro))
-dat$sub  <- ifelse(dat$ccode1 %in% 1:330 | dat$ccode2 %in% 1:330, 1, 0)
-dat$subr <- ifelse(dat$ccode1 %in% c(1:330, 600:699) | dat$ccode2 %in% c(1:330, 600:699), 1, 0)
+# dat$sub  <- ifelse(dat$ccode1 %in% 1:330 | dat$ccode2 %in% 1:330, 1, 0)
+# dat$subr <- ifelse(dat$ccode1 %in% c(1:330, 600:699) | dat$ccode2 %in% c(1:330, 600:699), 1, 0)
 
-dsub <- na.omit(filter(dat, sub == 1 & year >= 1900) %>% select(ln_trade, anyclaim, lag_ln_gdpmin, lag_ln_gdpmax, lag_ln_gdpcapmin, lag_ln_gdpcapmax, contdir, ldefense, lcaprat, polmin, polmax, dyad, year))
+# dsub <- na.omit(filter(dat, sub == 1 & year >= 1900) %>% select(ln_trade, anyclaim, lag_ln_gdpmin, lag_ln_gdpmax, lag_ln_gdpcapmin, lag_ln_gdpcapmax, contdir, ldefense, lcaprat, polmin, polmax, dyad, year))
 # a <- opm(ln_trademil ~ anyclaim + lag_ln_gdpmin + lag_ln_gdpmax + lag_ln_gdpcapmin + lag_ln_gdpcapmax +
 #            contdir + ldefense + lcaprat + polmin + polmax,
 #          data = b, subset = dat$year > 1900 & dat$sub == 1,
@@ -442,4 +445,4 @@ dsub <- na.omit(filter(dat, sub == 1 & year >= 1900) %>% select(ln_trade, anycla
 # xyplot(trade~year, data=dat, type='l', groups=dyad, xlab="Year", ylab='Number of Enforcement Actions', main="Clean Air Act Enforcement Actions by State")
 # 
 
-datout <- select(dat, dyad, year, lag_pch_gdpmin, lGovCrisesDy, polmin, polmax, autdy, demdy, samereg, Wmin, Wmax, lag_depdymin, lag_depdymin100, lag_deptotmin, lag_deptotmin100, lag_depothmin, lag_depothmin100, lag_ln_depdymin100, lamin, lamax, lbmin, lbmax, lcmin, lcmax, lcaprat, lpchcaprat, ldefense, contdir, trival, igosum)
+# datout <- select(dat, dyad, year, lag_pch_gdpmin, lGovCrisesDy, polmin, polmax, autdy, demdy, samereg, Wmin, Wmax, lag_depdymin, lag_depdymin100, lag_deptotmin, lag_deptotmin100, lag_depothmin, lag_depothmin100, lag_ln_depdymin100, lamin, lamax, lbmin, lbmax, lcmin, lcmax, lcaprat, lpchcaprat, ldefense, contdir, trival, igosum)
