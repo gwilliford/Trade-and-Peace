@@ -326,6 +326,8 @@ dat$govcrisesdy = ifelse(dat$GovCrises1 > 0 | dat$GovCrises2 > 0, 1, 0)
 dat <- dat %>% arrange(dyad, year) %>% mutate(
   lcaprat = lag(caprat),
   lag_ln_caprat = lag(ln_caprat),
+  pchcaprat = lag(caprat) / caprat,
+  lag_pchcaprat = lag(pchcaprat),
   
   lgdpcapt = lag(gdpcapt),
   lag_ln_gdpcapt = lag(ln_gdpcapt),
@@ -397,34 +399,18 @@ dat <- dat %>% arrange(dyad, year) %>% mutate(
   lag_pch_ln_gdp2 = lag(pch_ln_gdp2),
   lag_pch_ln_gdpcap1 = lag(pch_ln_gdpcap1),
   lag_pch_ln_gdpcap2 = lag(pch_ln_gdpcap2),
+  # lag_pch_gdpmin = lag(pch_gdpmin),
   
   lbdymid = lag(bdymid),
   lndymid = lag(ndymid),
+  lfatality = lag(fatality),
   
-  ldyterrclaim = lag(dyterrclaim),
-  lbtclaim = lag(btclaim),
-  lbmclaim = lag(bmclaim),
-  lbrclaim = lag(brclaim),
-  lntclaim = lag(ntclaim),
-  lnmclaim = lag(nmclaim),
-  lnrclaim = lag(nrclaim),
-  lanyclaim = lag(anyclaim),
-  ltotclaim = lag(totclaim),
   ldemdy = lag(demdy),
   ldefense = lag(defense), 
-  lfatality = lag(fatality),
-  lGovCrises1 = lag(GovCrises1),
-  lGovCrises2 = lag(GovCrises2),
-  lGovCrisesDy = lag(GovCrisesDy),
-  lag_pch_gdpmin = lag(pch_gdpmin),
-  lamin = lag(amin),
-  lamax = lag(amax),
-  lbmin = lag(bmin),
-  lbmax = lag(bmax),
-  lcmax = lag(cmax),
-  lcmin = lag(cmin),
-  pchcaprat = lag(caprat) / caprat,
-  lpchcaprat = lag(pchcaprat)
+  
+  lgovcrises1 = lag(GovCrises1),
+  lgovcrises2 = lag(GovCrises2),
+  lgovcrisesDy = lag(govcrisesdy)
 )
 #> with(dat, cor(cbind(ldyterrclaim, lag_ln_gdp1, lag_ln_gdp2, lag_ln_gdpcap1, lag_ln_gdpcap2, contdir, ldefense, lcaprat, lpol1, lpol2, year, y2), use = "complete.obs"))
 # 
