@@ -305,21 +305,10 @@ dat$ln_gdpcapt = log(dat$gdpcapt)
 dat$lnccdist <- ifelse(dat$ccdistance == 0, 0, log(dat$ccdistance))
 dat$conttype[is.na(dat$conttype)] <- 6
 dat$contdir <- ifelse(dat$conttype == 1, 1, 0)
-dat$dyterrclaim <- ifelse(is.na(dat$dyterrclaim), 0, 1)
-# dat$btclaim <- ifelse(is.na(dat$btclaim), 0, 1)
-# dat$bmclaim <- ifelse(is.na(dat$bmclaim), 0, 1)
-# dat$brclaim <- ifelse(is.na(dat$brclaim), 0, 1)
-# dat$anyclaim <- ifelse(is.na(dat$anyclaim), 0, 1)
 dat$ndymid <- ifelse(is.na(dat$ndymid), 0, dat$ndymid)
 dat$bdymid <- ifelse(is.na(dat$bdymid), 0, dat$bdymid)
 dat$fatality <- ifelse(is.na(dat$fatality), 0, dat$fatality)
 dat$trival <- ifelse(is.na(dat$trival), 0, 1)
-
-#dat$cyricowsal <- ifelse(!is.na(dat$cyrsal), dat$cyrsal, 0)
-# dat$mainland <- ifelse(!is.na(dat$mainland), 1, 0)
-# dat$defense <- ifelse(is.na(dat$defense), 0, dat$defense)
-# dat$bdymid <- ifelse(is.na(dat$bdymid), 0, 1)
-# dat$ndymid <- ifelse(is.na(dat$ndymid), 0, 1)
 dat$caprat <- rowMaxs(cbind(dat$cinc1, dat$cinc2)) / (dat$cinc1 + dat$cinc2)
 dat$ln_caprat <- ifelse(dat$caprat == 0, 0, log(dat$caprat))
 dat$polmin <- rowMins(cbind(dat$polity1, dat$polity2))
@@ -331,8 +320,6 @@ dat$ysquare = (dat$year^2) / 1000
 dat$ycubed  = (dat$year^3) / 1000
 dat$Wmin = rowMins(cbind(dat$W1, dat$W2))
 dat$Wmax = rowMaxs(cbind(dat$W1, dat$W2))
-# dat$GovCrisesMin = rowMins(cbind(dat$GovCrises1, dat$GovCrises2)) # don't make sense
-# dat$GovCrisesMax = rowMaxs(cbind(dat$GovCrises1, dat$GovCrises2))
 dat$govcrisesdy = ifelse(dat$GovCrises1 > 0 | dat$GovCrises2 > 0, 1, 0)
 
 # Lags
