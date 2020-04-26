@@ -16,9 +16,11 @@ library(DescTools)
 madd = read_csv("./data/madd.csv")
 dcap = read_dta("./data/NMC_5_0.dta")
 dpol = read_excel("./data/p4v2016.xls")
-dw   = read_dta("./data/bdm2s2_nation_year_data_may2002.dta")
-dw   = select(dw, ccode, year, W, S, GovCrises, strikes)
+dpol = select(dpol, ccode, year, polity2)
+dw   = read_dta("./data/bdm2s2_nation_year_data_may2002.dta") %>%
+  select(ccode, year, W, S, GovCrises, strikes)
 chisols <- read_dta('./data/CHISOLSstyr4_0.dta')
+select(dpol, ccode, year, polity2)
 chisols <- dplyr::select(chisols, ccode, year, totalldrtrans, leadertrans, solschange, solschdum, solschange30, solsch30dum, solsminchange, solsminchdum)
 
 ### Create common identifiers for dyadic data
@@ -32,77 +34,38 @@ undirdyads <- function(df, ccode1, ccode2) {
   return(dyad)
 }
 
-bifdi <- read_dta("./data/FDI_ICOW_LEEMITCHELL11.dta")
-
-### Dyadic trade data
-dtrade <- read_csv("./data/Dyadic_COW_4.0.csv")
-dtrade$dyad = undirdyads(dtrade, ccode1, ccode2)
-dtrade$flow1 <- ifelse(dtrade$flow1 < 0, NA, dtrade$flow1)
-dtrade$flow2 <- ifelse(dtrade$flow2 < 0, NA, dtrade$flow2)
-dtrade$smoothtotrade <- ifelse(dtrade$smoothtotrade < 0, NA, dtrade$smoothtotrade)# * 1000000
-dtrade$flow1_100 <- dtrade$flow1 * 1000000
-dtrade$flow2_100 <- dtrade$flow2 * 1000000
-dtrade$smoothtotrade_100 <- dtrade$smoothtotrade * 1000000
-
 ### Monadic trade
 mtrade <- read_csv('./data/National_COW_4.0.csv')
-mtrade$imports <- mtrade$imports
-mtrade$exports <- mtrade$exports
-mtrade$imports_100 <- mtrade$imports * 1000000
-mtrade$exports_100 <- mtrade$exports * 1000000
-mtrade$agg <- mtrade$imports + mtrade$exports
-mtrade$agg_100 <- mtrade$imports_100 + mtrade$exports_100
-
-### ICOW partial data
-icow_part_cyr <- read_dta("./data/ICOWdyadyr.dta")
-icow_part_dyr <- ungroup(icow_part_cyr %>% group_by(dyad, year) %>% summarize(
-  ntclaim = sum(terriss, na.rm = T),
-  btclaim = max(terriss),
-  nmclaim = sum(mariss, na.rm = T),
-  bmclaim = max(mariss),
-  nrclaim = sum(riveriss, na.rm = T),
-  brclaim = max(riveriss), 
-  totclaim = ntclaim + nmclaim + nrclaim,
-  anyclaim = 1
-))
-
-
-### ICOW dyad year data
-icow_full_dyr = icow_full_cyr %>% group_by(dyad, year) %>% summarize(
-  dyterrclaim = 1,
-  mainland = max(tcoffshore),
-  claimyrsal = max(icowsal),
-  claimyrtan = max(saltan),
-  claimyrint = max(salint),
-  claimyrintc = max(salintc),
-  claimyrintt = max(salintt)
-)
+mtrade$importsmil <- mtrade$imports * 1000000
+mtrade$exportsmil <- mtrade$exports * 1000000
+mtrade$aggtrade <- mtrade$imports + mtrade$exports
+mtrade$aggtrademil <- mtrade$importsmil + mtrade$exportsmil
+mtrade <- mtrade %>%
+  select(ccode, year, imports, exports, importsmil, exportsmil, aggtrade, aggtrademil)
 
 ### Leader support data
 ead <- read_dta("./data/EAD+2.0+Annual+0101019.dta")
 
 ### Merge Monadic Data
 dmon = full_join(madd, dcap)
-dmon = full_join(dmon, select(dpol, ccode, year, polity2))
-dmon = full_join(dmon, filter(dw, !is.na(ccode)))
+dmon = full_join(dmon, dpol)
 dmon = full_join(dmon, chisols)
-dmon = full_join(dmon, select(mtrade, ccode, year, imports, exports, agg, imports_100, exports_100, agg_100))
+dmon = full_join(dmon, dw)
 dmon = full_join(dmon, ead)
-
-# Check for duplicates
-# sum(duplicated(dmon[, c("ccode", "year")]))
-# dmon[duplicated(dmon[, c("ccode", "year")]),]
-
-#dmon$lnpop <- log(dmon$pop)
+dmon = full_join(dmon, mtrade)
 
 ### Monadic Lags
-dmon <- dmon %>% arrange(ccode, year) %>% mutate(
-  # Trade vars
-    ln_agg = ifelse(is.na(agg), 0, log(agg)),
-    ln_agg_100 = ifelse(is.na(agg_100), 0, log(agg_100)),
-    lag_ln_agg = lag(ln_agg),
-    lag_ln_agg_100 = lag(ln_agg_100),
-  # GDP vars
+dmon <- dmon %>%
+  arrange(ccode, year) %>%
+  mutate(
+    
+    # Trade vars
+    ln_aggtrade = ifelse(is.na(aggtrade), 0, log(aggtrade)),
+    ln_aggtrademil = ifelse(is.na(aggtrademil), 0, log(aggtrademil)),
+    lag_ln_aggtrade = lag(ln_aggtrade),
+    lag_ln_aggtrademil = lag(ln_aggtrademil),
+    
+    # GDP vars
     lag_gdp = lag(gdp), 
     lag_gdpcap = lag(gdpcap),
     ln_gdp = ifelse(gdp == 0, 0, log(gdp)),
@@ -113,21 +76,22 @@ dmon <- dmon %>% arrange(ccode, year) %>% mutate(
     pch_gdpcap = (gdpcap - lag_gdpcap)/lag_gdpcap * 100,
     pch_ln_gdp    = (ln_gdp - lag_ln_gdp)/lag_ln_gdp * 100,
     pch_ln_gdpcap = (ln_gdpcap - lag_ln_gdpcap)/lag_ln_gdpcap * 100,
-  # Control vars
+    
+    # Control vars
     lcinc = lag(cinc) * 10,
-    lnmidcyr  = lag(nmidcyr),
-    lbmidcyr = lag(bmidcyr),
-    lbterrclaim = lag(bterrclaim),
-    lnterrclaim = lag(nterrclaim),
     lag_pop = lag(pop),
     ln_pop = log(pop),
     lag_ln_pop = lag(ln_pop),
-  # Institutional vars
+    
+    # Institutional vars
     lpol = lag(polity2), 
     lagW = lag(W),
     lagS = lag(S),
-    dy2 = year * year / 1000
-)
+  )
+
+# Check for duplicates
+sum(duplicated(dmon[, c("ccode", "year")]))
+dmon[duplicated(dmon[, c("ccode", "year")]),]
 
 # Create separate versions of monadic data
 dmon1 = dmon %>% select(-"version") %>% setNames(paste0(names(.), "1")) %>% rename(year = year1)
