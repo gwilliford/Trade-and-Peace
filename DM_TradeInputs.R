@@ -113,6 +113,40 @@ dally <- dally %>%
   ) %>% 
   select(dyad, year, defense)#neutrality, nonaggression, entente
 
+### Gibler MID data
+dmid <- read_csv("./data/gml-ndy-disputes-2.0.csv")
+dmid$dyad <- undirdyads(dmid, ccode1, ccode2)
+dmid$dmidyr = 1
+dmid$fatality <- replace(dmid$fatality, dmid$fatality == -9, NA)
+dmiddy <- dmid %>%
+  group_by(dyad, year) %>%
+  summarize(
+    ndymid = sum(dmidyr, na.rm = T),
+    bdymid = 1, 
+    fatality = max(fatality)
+  )
+# cmid1 <- dmid %>% 
+#   group_by(ccode1, year) %>%
+#   summarize(
+#     nmidcyr1 = sum(dmidyr, na.rm = T),
+#     bmidcyr1 = 1
+#   ) %>%
+#   select("ccode1" = "ccode", year, nmidcyr1, bmidcyr1)
+# cmid2 <- dmid %>%
+#   group_by(ccode2, year) %>%
+#   summarize(
+#     nmidcyr2 = sum(dmidyr, na.rm = T),
+#     bmidcyr2 = 1
+#   ) %>% 
+#   select("ccode2" = "ccode", year, nmidcyr2, bmidcyr2)
+# cmida <- full_join(cmid1, cmid2) %>%
+#   mutate(
+#     nmidcyr = nmidcyr1 + nmidcyr2,
+#     bmidcyr = bmidcyr1 + bmidcyr2
+#   ) %>%
+#   select(ccode, year, nmidcyr, bmidcyr)
+# 
+
 dtrade <- read_csv("./data/Dyadic_COW_4.0.csv")
 dtrade$dyad = undirdyads(dtrade, ccode1, ccode2)
 dtrade$flow1 <- ifelse(dtrade$flow1 < 0, NA, dtrade$flow1)
@@ -267,24 +301,25 @@ dat$ln_gdpcapt = log(dat$gdpcapt)
 # percent change gdp dyadic
 # dat$pch_gdp_min = rowMins(cbind(dat$pch_gdp1, dat$pch_gdp2))
 
-
 # Other dyadic variables
 dat$lnccdist <- ifelse(dat$ccdistance == 0, 0, log(dat$ccdistance))
 dat$conttype[is.na(dat$conttype)] <- 6
 dat$contdir <- ifelse(dat$conttype == 1, 1, 0)
 dat$dyterrclaim <- ifelse(is.na(dat$dyterrclaim), 0, 1)
-dat$btclaim <- ifelse(is.na(dat$btclaim), 0, 1)
-dat$bmclaim <- ifelse(is.na(dat$bmclaim), 0, 1)
-dat$brclaim <- ifelse(is.na(dat$brclaim), 0, 1)
-dat$anyclaim <- ifelse(is.na(dat$anyclaim), 0, 1)
+# dat$btclaim <- ifelse(is.na(dat$btclaim), 0, 1)
+# dat$bmclaim <- ifelse(is.na(dat$bmclaim), 0, 1)
+# dat$brclaim <- ifelse(is.na(dat$brclaim), 0, 1)
+# dat$anyclaim <- ifelse(is.na(dat$anyclaim), 0, 1)
+dat$ndymid <- ifelse(is.na(dat$ndymid), 0, dat$ndymid)
+dat$bdymid <- ifelse(is.na(dat$bdymid), 0, dat$bdymid)
 dat$fatality <- ifelse(is.na(dat$fatality), 0, dat$fatality)
 dat$trival <- ifelse(is.na(dat$trival), 0, 1)
 
 #dat$cyricowsal <- ifelse(!is.na(dat$cyrsal), dat$cyrsal, 0)
-dat$mainland <- ifelse(!is.na(dat$mainland), 1, 0)
-dat$defense <- ifelse(is.na(dat$defense), 0, dat$defense)
-dat$bdymid <- ifelse(is.na(dat$bdymid), 0, 1)
-dat$ndymid <- ifelse(is.na(dat$ndymid), 0, 1)
+# dat$mainland <- ifelse(!is.na(dat$mainland), 1, 0)
+# dat$defense <- ifelse(is.na(dat$defense), 0, dat$defense)
+# dat$bdymid <- ifelse(is.na(dat$bdymid), 0, 1)
+# dat$ndymid <- ifelse(is.na(dat$ndymid), 0, 1)
 dat$caprat <- rowMaxs(cbind(dat$cinc1, dat$cinc2)) / (dat$cinc1 + dat$cinc2)
 dat$ln_caprat <- ifelse(dat$caprat == 0, 0, log(dat$caprat))
 dat$polmin <- rowMins(cbind(dat$polity1, dat$polity2))
@@ -292,13 +327,13 @@ dat$polmax <- rowMaxs(cbind(dat$polity1, dat$polity2))
 dat$demdy <- ifelse(dat$polity1 > 5 & dat$polity2 > 5, 1, 0)
 dat$autdy <- ifelse(dat$polity1 < -5 & dat$polity2 < -5, 1, 0)
 dat$samereg <- ifelse(dat$demdy == 1 | dat$autdy == 1, 1, 0)
-dat$ysq = (dat$year^2) / 1000
-dat$y3 = (dat$year^3) / 1000
+dat$ysquare = (dat$year^2) / 1000
+dat$ycubed  = (dat$year^3) / 1000
 dat$Wmin = rowMins(cbind(dat$W1, dat$W2))
 dat$Wmax = rowMaxs(cbind(dat$W1, dat$W2))
 # dat$GovCrisesMin = rowMins(cbind(dat$GovCrises1, dat$GovCrises2)) # don't make sense
 # dat$GovCrisesMax = rowMaxs(cbind(dat$GovCrises1, dat$GovCrises2))
-dat$GovCrisesDy = ifelse(dat$GovCrises1 > 0 | dat$GovCrises2 > 0, 1, 0)
+dat$govcrisesdy = ifelse(dat$GovCrises1 > 0 | dat$GovCrises2 > 0, 1, 0)
 
 # Lags
 dat <- dat %>% arrange(dyad, year) %>% mutate(
