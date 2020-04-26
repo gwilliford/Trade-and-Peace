@@ -44,28 +44,8 @@ dtrade$smoothtotrade <- ifelse(dtrade$smoothtotrade < 0, NA, dtrade$smoothtotrad
 dtrade$flow1_100 <- dtrade$flow1 * 1000000
 dtrade$flow2_100 <- dtrade$flow2 * 1000000
 dtrade$smoothtotrade_100 <- dtrade$smoothtotrade * 1000000
-### Total global trade for each country-year
-# Barbieri in millions of dollars
-# Maddison in dollars
-# Get sum of imports, exports, and both when country i is ccode1
-# dtrade1 <- dtrade %>% group_by(ccode1, year) %>% summarize(
-#   imp1 = sum(flow1, na.rm = T), # sum of exports
-#   exp1 = sum(flow2, na.rm = T), # sum of imports
-#   agg1 = imp1 + exp1 # total trade
-# ) %>% rename(ccode = ccode1)
-# # Get sum of imports and exports when country i is ccode2
-# dtrade2 <- dtrade %>% group_by(ccode2, year) %>% summarize(
-#   imp2 = sum(flow2, na.rm = T),
-#   exp2 = sum(flow1, na.rm = T),
-#   agg2 = imp2 + exp2
-# ) %>% rename(ccode = ccode2)
-# # Merge dtrade1 and dtrade2 by ccode and year and create aggregate variables
-# dtradea <- full_join(dtrade1, dtrade2) %>% mutate (
-#   imptot = imp1 + imp2,
-#   exptot = exp1 + exp2,
-#   aggtot = agg1 + agg2
-# ) %>% select(ccode, year, imptot, exptot, aggtot)
-# dtradea$lnagg <- ifelse(dtradea$aggtot == 0, 0, log(dtradea$aggtot))
+
+### Monadic trade
 mtrade <- read_csv('./data/National_COW_4.0.csv')
 mtrade$imports <- mtrade$imports
 mtrade$exports <- mtrade$exports
@@ -74,15 +54,7 @@ mtrade$exports_100 <- mtrade$exports * 1000000
 mtrade$agg <- mtrade$imports + mtrade$exports
 mtrade$agg_100 <- mtrade$imports_100 + mtrade$exports_100
 
-### ICOW global territory claim year data
-icow_full_cyr = read_csv("./data/ICOWprovyr101.csv")
-icow_full_cyr$ccode1 = rowMins(cbind(icow_full_cyr$chal, icow_full_cyr$tgt))
-icow_full_cyr$ccode2 = rowMaxs(cbind(icow_full_cyr$chal, icow_full_cyr$tgt))
-icow_full_cyr$tclaim = 1
-icow_full_cyr$salint1 = with(icow_full_cyr, ifelse(chal == ccode1, max(salintc), max(salintt)))
-icow_full_cyr$salint2 = with(icow_full_cyr, ifelse(chal == ccode2, max(salintc), max(salintt)))
-
-### ICOS partial data
+### ICOW partial data
 icow_part_cyr <- read_dta("./data/ICOWdyadyr.dta")
 icow_part_dyr <- ungroup(icow_part_cyr %>% group_by(dyad, year) %>% summarize(
   ntclaim = sum(terriss, na.rm = T),
@@ -96,31 +68,29 @@ icow_part_dyr <- ungroup(icow_part_cyr %>% group_by(dyad, year) %>% summarize(
 ))
 
 ### ICOW country year summary
-icow_country1 = icow_full_cyr %>% group_by(ccode1, year) %>% summarize(
-  nterrclaim1 = sum(tclaim),
-  bterrclaim1 = 1,
-  # mainland1 = max(tcoffshore),
-  salmax1 = max(icowsal),
-  # saltanmax1 = max(saltan),
-  # salintmax1 = max(salint1)
-) %>% rename(ccode = ccode1)
+icow_country1 = icow_full_cyr %>%
+  group_by(ccode1, year) %>%
+  summarize(
+    nterrclaim1 = sum(tclaim),
+    bterrclaim1 = 1,
+    salmax1 = max(icowsal),
+  ) %>% 
+  rename(ccode = ccode1)
 
-icow_country2 = icow_full_cyr %>% group_by(ccode2, year) %>% summarize(
-  nterrclaim2 = sum(tclaim),
-  bterrclaim2 = 1,
-  # mainland2 = max(tcoffshore),
-  salmax2 = max(icowsal),
-  # saltanmax2 = max(saltan),
-  # salintmax2 = max(salint2)
-) %>% rename(ccode = ccode2)
+icow_country2 = icow_full_cyr %>%
+  group_by(ccode2, year) %>%
+  summarize(
+    nterrclaim2 = sum(tclaim),
+    bterrclaim2 = 1,
+    salmax = max(icowsal),
+  ) %>%
+  rename(ccode = ccode2)
 
-icow_countrya <- full_join(icow_country1, icow_country2) %>% mutate(
+icow_countrya <- full_join(icow_country1, icow_country2) %>%
+  mutate(
   nterrclaim = nterrclaim1 + nterrclaim2,
   bterrclaim = bterrclaim1 + bterrclaim2,
-  # mainland = mainland1 + mainland2,
   salmaxt = rowMaxs(cbind(salmax1, salmax2))
-  # saltanmax = saltanmax1 + saltanmax2,
-  # salintmax = salintmax1 + salintmax2
 )
 
 ### Gibler MID data
