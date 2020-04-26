@@ -226,8 +226,8 @@ dat$depothmax = rowMaxs(cbind(dat$depoth1, dat$depoth2))
 
 dat$depothmil1 = dat$aggtrademil1 - dat$trademil / dat$gdp1
 dat$depothmil2 = dat$aggtrademil2 - dat$trademil / dat$gdp2
-dat$depothminmil = rowMins(cbind(dat$depothmil1, dat$depothmil2))
-dat$depothmaxmil = rowMaxs(cbind(dat$depothmil1, dat$depothmil2))
+dat$depothmilmin = rowMins(cbind(dat$depothmil1, dat$depothmil2))
+dat$depothmilmax = rowMaxs(cbind(dat$depothmil1, dat$depothmil2))
 
 dat$ln_depoth1 = ifelse(dat$depoth1 == 0, 0, log(dat$depoth1))
 dat$ln_depoth2 = ifelse(dat$depoth2 == 0, 0, log(dat$depoth2))
@@ -256,8 +256,8 @@ dat$depdymin = rowMins(cbind(dat$depdy1, dat$depdy2))
 
 dat$depdymil1 = dat$trademil/dat$gdp1 #depdy1 is 1's dependence on 2 (exports/gdpcap)
 dat$depdymil2 = dat$trademil/dat$gdp2  # higher values indicate that 2 is more dependent on trade
-dat$depdyminmil = rowMins(cbind(dat$depdymil1, dat$depdymil2))
-dat$depdymaxmil = rowMaxs(cbind(dat$depdymil1, dat$depdymil2))
+dat$depdymilmin = rowMins(cbind(dat$depdymil1, dat$depdymil2))
+dat$depdymilmax = rowMaxs(cbind(dat$depdymil1, dat$depdymil2))
 
 dat$ln_depdy1 = ifelse(dat$depdy1 == 0, 0, log(dat$depdy1))
 dat$ln_depdy2 = ifelse(dat$depdy2 == 0, 0, log(dat$depdy2))
@@ -266,11 +266,11 @@ dat$ln_depdymin = ifelse(dat$depdymin == 0, 0, log(dat$depdymin))
 
 dat$ln_depdymil1 = ifelse(dat$depdymil1 == 0, 0, log(dat$depdymil1))
 dat$ln_depdymil2 = ifelse(dat$depdymil2 == 0, 0, log(dat$depdymil2))
-dat$ln_depdyminmil = ifelse(dat$depdyminmil == 0, 0, log(dat$depdyminmil))
-dat$ln_depdymaxmil = ifelse(dat$depdymaxmil == 0, 0, log(dat$depdymaxmil))
+dat$ln_depdymilmin = ifelse(dat$depdymilmin == 0, 0, log(dat$depdymilmin))
+dat$ln_depdymilmax = ifelse(dat$depdymilmax == 0, 0, log(dat$depdymilmax))
 
-# dat$a1 <- dat$ln_trade_100 - dat$ln_gdp1
-# dat$a2 <- dat$ln_trade_100 - dat$ln_gdp2
+# dat$a1 <- dat$ln_trademil - dat$ln_gdp1
+# dat$a2 <- dat$ln_trademil - dat$ln_gdp2
 # dat$amin <- rowMins(cbind(dat$a1, dat$a2))
 # dat$amax <- rowMaxs(cbind(dat$a1, dat$a2))
 
@@ -278,12 +278,12 @@ dat$ln_depdymaxmil = ifelse(dat$depdymaxmil == 0, 0, log(dat$depdymaxmil))
 # 
 # loga (x/y) = loga x - loga y
 
-# summary(dat$ln_trade_100 - dat$ln_gdp1)
-# summary(log(dat$ln_trade_100/dat$ln_gdp1))
+# summary(dat$ln_trademil - dat$ln_gdp1)
+# summary(log(dat$ln_trademil/dat$ln_gdp1))
 
 # Dyadic GDP variables
-dat$gdp_min = rowMins(cbind(dat$gdp1, dat$gdp2))
-dat$gdp_max = rowMaxs(cbind(dat$gdp1, dat$gdp2))
+dat$gdpmin = rowMins(cbind(dat$gdp1, dat$gdp2))
+dat$gdpmax = rowMaxs(cbind(dat$gdp1, dat$gdp2))
 dat$gdpt = dat$gdp1 + dat$gdp2
 
 dat$ln_gdpmin = rowMins(cbind(dat$ln_gdp1, dat$ln_gdp2))
@@ -299,7 +299,7 @@ dat$ln_gdpcapmax = rowMaxs(cbind(dat$ln_gdpcap1, dat$ln_gdpcap2))
 dat$ln_gdpcapt = log(dat$gdpcapt)
 
 # percent change gdp dyadic
-# dat$pch_gdp_min = rowMins(cbind(dat$pch_gdp1, dat$pch_gdp2))
+# dat$pch_gdpmin = rowMins(cbind(dat$pch_gdp1, dat$pch_gdp2))
 
 # Other dyadic variables
 dat$lnccdist <- ifelse(dat$ccdistance == 0, 0, log(dat$ccdistance))
@@ -326,64 +326,81 @@ dat$govcrisesdy = ifelse(dat$GovCrises1 > 0 | dat$GovCrises2 > 0, 1, 0)
 dat <- dat %>% arrange(dyad, year) %>% mutate(
   lcaprat = lag(caprat),
   lag_ln_caprat = lag(ln_caprat),
+  
   lgdpcapt = lag(gdpcapt),
-  lag_ln_gdpcapt = lag(lngdpcapt),
-  lag_ln_gdp_min = lag(ln_gdp_min),
-  lag_ln_gdp_max = lag(ln_gdp_max),
-  lag_ln_gdpcap_min = lag(ln_gdpcap_min),
-  lag_ln_gdpcap_max = lag(ln_gdpcap_max),
+  lag_ln_gdpcapt = lag(ln_gdpcapt),
+  lag_ln_gdpmin = lag(ln_gdpmin),
+  lag_ln_gdpmax = lag(ln_gdpmax),
+  
+  lag_ln_gdpcapmin = lag(ln_gdpcapmin),
+  lag_ln_gdpcapmax = lag(ln_gdpcapmax),
+  
   lag_trade = lag(trade),
   lag_ln_trade = lag(ln_trade),
+  lag_trademil = lag(trademil),
+  lag_ln_trademil = lag(ln_trademil),
+  
   lag_deptot1 = lag(deptot1),
   lag_deptot2 = lag(deptot2),
   lag_deptotmin = lag(deptotmin),
   lag_deptotmax = lag(deptotmax),
-  lag_depdy1 = lag(depdy1),
-  lag_depdy2 = lag(depdy2),
-  lag_depdymin = lag(depdymin),
-  lag_depdymax = lag(depdymax),
+  
   lag_ln_deptot1 = lag(ln_deptot1),
   lag_ln_deptot2 = lag(ln_deptot2),
   lag_ln_deptotmax = lag(ln_deptotmax),
   lag_ln_deptotmin = lag(ln_deptotmin),
+  
+  lag_deptotmil1 = lag(deptotmil1),
+  lag_deptotmil2 = lag(deptotmil2),
+  lag_deptotmilmin = lag(deptotmilmin),
+  lag_deptotmilmax = lag(deptotmilmax),
+  
+  lag_ln_deptotmil1 = lag(ln_deptotmil1),
+  lag_ln_deptotmil2= lag(ln_deptotmil2),
+  lag_ln_deptotmilmin = lag(ln_deptotmilmin),
+  lag_ln_deptotmilmax = lag(ln_deptotmilmax),
+  
   lag_ln_depoth1 = lag(ln_depoth1),
   lag_ln_depoth2 = lag(ln_depoth2),
+  lag_depothmin = lag(depothmin),
+  lag_depothmilmin = lag(depothmilmin),
+  
   lag_ln_depothmin = lag(ln_depothmin),
   lag_ln_depothmax = lag(ln_depothmax),
+  
+  lag_ln_depothmil1 = lag(ln_depothmil1),
+  lag_ln_depothmil2 = lag(ln_depothmil2),
+  lag_ln_depothmilmin = lag(ln_depothmilmin),
+  lag_ln_depothmilmax = lag(ln_depothmilmax),
+  
+  lag_depdy1 = lag(depdy1),
+  lag_depdy2 = lag(depdy2),
+  lag_depdymin = lag(depdymin),
+  lag_depdymax = lag(depdymax),
+  
   lag_ln_depdy1 = lag(ln_depdy1),
   lag_ln_depdy2 = lag(ln_depdy2),
   lag_ln_depdymin = lag(ln_depdymin),
   lag_ln_depdymax = lag(ln_depdymax),
-  lag_trade_100 = lag(trade_100),
-  lag_ln_trade_100 = lag(ln_trade_100),
-  lag_deptot100_1 = lag(deptot100_1),
-  lag_deptot100_2 = lag(deptot100_2),
-  lag_deptotmin_100 = lag(deptotmin_100),
-  lag_deptotmax_100 = lag(deptotmax_100),
-  lag_depdy100_1 = lag(depdy100_1),
-  lag_depdy100_2 = lag(depdy100_2),
-  lag_depdymax_100 = lag(depdymax_100),
-  lag_depdymin_100 = lag(depdymin_100),
-  lag_depothmin = lag(depothmin),
-  lag_depothmin_100 = lag(depothmin_100),
-  lag_ln_deptot100_1 = lag(ln_deptot100_1),
-  lag_ln_deptot100_2= lag(ln_deptot100_2),
-  lag_ln_deptotmin_100 = lag(ln_deptotmin_100),
-  lag_ln_deptotmax_100 = lag(ln_deptotmax_100),
-  lag_ln_depoth100_1 = lag(ln_depoth100_1),
-  lag_ln_depoth100_2 = lag(ln_depoth100_2),
-  lag_ln_depothmin_100 = lag(ln_depothmin_100),
-  lag_ln_depothmax_100 = lag(ln_depothmax_100),
-  lag_ln_depdy100_1 = lag(ln_depdy100_1),
-  lag_ln_depdy100_2 = lag(ln_depdy100_2),
-  lag_ln_depdymin_100 = lag(ln_depdymin_100),
-  lag_ln_depdymax_100 = lag(ln_depdymax_100),
+  
+  lag_depdymil1 = lag(depdymil1),
+  lag_depdymil2 = lag(depdymil2),
+  lag_depdymilmax = lag(depdymilmax),
+  lag_depdymilmin = lag(depdymilmin),
+  
+  lag_ln_depdymil1 = lag(ln_depdymil1),
+  lag_ln_depdymil2 = lag(ln_depdymil2),
+  lag_ln_depdymilmin = lag(ln_depdymilmin),
+  lag_ln_depdymilmax = lag(ln_depdymilmax),
+  
   lag_pch_ln_gdp1 = lag(pch_ln_gdp1),
   lag_pch_ln_gdp2 = lag(pch_ln_gdp2),
   lag_pch_ln_gdpcap1 = lag(pch_ln_gdpcap1),
   lag_pch_ln_gdpcap2 = lag(pch_ln_gdpcap2),
+  
   lbdymid = lag(bdymid),
   lndymid = lag(ndymid),
+  
   ldyterrclaim = lag(dyterrclaim),
   lbtclaim = lag(btclaim),
   lbmclaim = lag(bmclaim),
@@ -398,10 +415,8 @@ dat <- dat %>% arrange(dyad, year) %>% mutate(
   lfatality = lag(fatality),
   lGovCrises1 = lag(GovCrises1),
   lGovCrises2 = lag(GovCrises2),
-  # lGovCrisesMin = lag(GovCrisesMin),
-  # lGovCrisesMax = lag(GovCrisesMax),
   lGovCrisesDy = lag(GovCrisesDy),
-  lag_pch_gdp_min = lag(pch_gdp_min),
+  lag_pch_gdpmin = lag(pch_gdpmin),
   lamin = lag(amin),
   lamax = lag(amax),
   lbmin = lag(bmin),
@@ -423,8 +438,8 @@ dat <- dat %>% arrange(dyad, year) %>% mutate(
 dat$sub  <- ifelse(dat$ccode1 %in% 1:330 | dat$ccode2 %in% 1:330, 1, 0)
 dat$subr <- ifelse(dat$ccode1 %in% c(1:330, 600:699) | dat$ccode2 %in% c(1:330, 600:699), 1, 0)
 
-dsub <- na.omit(filter(dat, sub == 1 & year >= 1900) %>% select(ln_trade, anyclaim, lag_ln_gdp_min, lag_ln_gdp_max, lag_ln_gdpcap_min, lag_ln_gdpcap_max, contdir, ldefense, lcaprat, polmin, polmax, dyad, year))
-# a <- opm(ln_trade_100 ~ anyclaim + lag_ln_gdp_min + lag_ln_gdp_max + lag_ln_gdpcap_min + lag_ln_gdpcap_max +
+dsub <- na.omit(filter(dat, sub == 1 & year >= 1900) %>% select(ln_trade, anyclaim, lag_ln_gdpmin, lag_ln_gdpmax, lag_ln_gdpcapmin, lag_ln_gdpcapmax, contdir, ldefense, lcaprat, polmin, polmax, dyad, year))
+# a <- opm(ln_trademil ~ anyclaim + lag_ln_gdpmin + lag_ln_gdpmax + lag_ln_gdpcapmin + lag_ln_gdpcapmax +
 #            contdir + ldefense + lcaprat + polmin + polmax,
 #          data = b, subset = dat$year > 1900 & dat$sub == 1,
 #          index = c("dyad", "year"), n.samp = 100)
@@ -441,4 +456,4 @@ dsub <- na.omit(filter(dat, sub == 1 & year >= 1900) %>% select(ln_trade, anycla
 # xyplot(trade~year, data=dat, type='l', groups=dyad, xlab="Year", ylab='Number of Enforcement Actions', main="Clean Air Act Enforcement Actions by State")
 # 
 
-datout <- select(dat, dyad, year, lag_pch_gdp_min, lGovCrisesDy, polmin, polmax, autdy, demdy, samereg, Wmin, Wmax, lag_depdymin, lag_depdymin_100, lag_deptotmin, lag_deptotmin_100, lag_depothmin, lag_depothmin_100, lag_ln_depdymin_100, lamin, lamax, lbmin, lbmax, lcmin, lcmax, lcaprat, lpchcaprat, ldefense, contdir, trival, igosum)
+datout <- select(dat, dyad, year, lag_pch_gdpmin, lGovCrisesDy, polmin, polmax, autdy, demdy, samereg, Wmin, Wmax, lag_depdymin, lag_depdymin100, lag_deptotmin, lag_deptotmin100, lag_depothmin, lag_depothmin100, lag_ln_depdymin100, lamin, lamax, lbmin, lbmax, lcmin, lcmax, lcaprat, lpchcaprat, ldefense, contdir, trival, igosum)
