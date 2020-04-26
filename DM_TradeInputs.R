@@ -67,32 +67,6 @@ icow_part_dyr <- ungroup(icow_part_cyr %>% group_by(dyad, year) %>% summarize(
   anyclaim = 1
 ))
 
-### Gibler MID data
-dmid <- read_csv("./data/gml-ndy-disputes-2.0.csv")
-dmid$dyad <- undirdyads(dmid, ccode1, ccode2)
-# dmid$fatality <- LOCF(dmid$fatality) # Not coded correctly - neads to be done by dyad
-# dmid$fatality <- ifelse(dmid$fatality == -9, 0, dmid$fatality)
-dmid$dmidyr = 1
-dmiddy <- dmid %>% group_by(dyad, year) %>% summarize(
-  ndymid = sum(dmidyr, na.rm = T),
-  bdymid = 1, 
-  fatality = max(fatality)
-)
-
-cmid1 <- dmid %>% group_by(ccode1, year) %>% summarize(
-  nmidcyr1 = sum(dmidyr, na.rm = T),
-  bmidcyr1 = 1
-) %>% rename(ccode = ccode1) %>% select(ccode, year, nmidcyr1, bmidcyr1)
-
-cmid2 <- dmid %>% group_by(ccode2, year) %>% summarize(
-  nmidcyr2 = sum(dmidyr, na.rm = T),
-  bmidcyr2 = 1
-) %>% rename(ccode = ccode2) %>% select(ccode, year, nmidcyr2, bmidcyr2)
-
-cmida <- full_join(cmid1, cmid2) %>% mutate(
-  nmidcyr = nmidcyr1 + nmidcyr2,
-  bmidcyr = bmidcyr1 + bmidcyr2
-) %>% select(ccode, year, nmidcyr, bmidcyr)
 
 ### ICOW dyad year data
 icow_full_dyr = icow_full_cyr %>% group_by(dyad, year) %>% summarize(
@@ -113,21 +87,8 @@ dmon = full_join(madd, dcap)
 dmon = full_join(dmon, select(dpol, ccode, year, polity2))
 dmon = full_join(dmon, filter(dw, !is.na(ccode)))
 dmon = full_join(dmon, chisols)
-#dmon = full_join(dmon, dtradea)
-# dmon = full_join(dmon, mtrade)
 dmon = full_join(dmon, select(mtrade, ccode, year, imports, exports, agg, imports_100, exports_100, agg_100))
-dmon = full_join(dmon, cmida)
-dmon = full_join(dmon, icow_countrya)
 dmon = full_join(dmon, ead)
-
-dmon$nmidcyr <- ifelse(is.na(dmon$nmidcyr), 0, dmon$nmidcyr)
-dmon$bmidcyr <- ifelse(is.na(dmon$bmidcyr), 0, dmon$bmidcyr)
-dmon$nterrclaim <- ifelse(is.na(dmon$nterrclaim), 0, dmon$nterrclaim)
-dmon$bterrclaim <- ifelse(is.na(dmon$bterrclaim), 0, dmon$bterrclaim)
-# dmon$mainland <- ifelse(is.na(dmon$mainland), 0, dmon$mainland)
-# dmon$salmax <- ifelse(is.na(dmon$salmax), 0, dmon$salmax)
-# dmon$saltanmax <- ifelse(is.na(dmon$saltanmax), 0, dmon$saltanmax)
-# dmon$salintmax <- ifelse(is.na(dmon$salintmax), 0, )
 
 # Check for duplicates
 # sum(duplicated(dmon[, c("ccode", "year")]))
