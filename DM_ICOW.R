@@ -10,25 +10,27 @@ if(!exists("dat")) datlag <- load("./data/TradeInputs.RDS")
 
 ##### ICOW settlement data
 icow_set <- read_dta("./data/ICOWsettle.dta") %>%
-  filter(midiss == 0) %>% 
+  # filter(midiss == 0) %>% 
   select(-mid)
 
 # Create agreement dummies
+# icow_set$icowmid <- ifelse(is.na(icow_set$midiss), 0, icow_set$midiss)
 icow_set$agree <- ifelse(is.na(icow_set$agree), 0, icow_set$agree)
 icow_set$agreeiss <- ifelse(is.na(icow_set$agreeiss), 0, icow_set$agreeiss)
 icow_set$ag_end_any  <- ifelse(icow_set$agreeiss == 1 & (icow_set$claimend == 1:2), 1, 0)
 icow_set$ag_end_part <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 1, 1, 0)
 icow_set$ag_end_full <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 2, 1, 0)
 
-##### Collapse icow settlement data to dyad year format
-
+#Collapse icow settlement data to dyad year format
 icow_set_cldy <- icow_set %>%
   group_by(claimdy, year) %>%
   summarize(
+    # sicowmid = sum(icowmid, na.rm = T),
     sagree = sum(agree, na.rm = T),
     sagreeiss = sum(agreeiss, na.rm = T),
+    # bicowmid = if_else(sicowmid > 0, 1, 0),
     bagree = if_else(sagree > 0, 1, 0),
-    bagreeiss = if_else(sagreeiss > 0, 1, 0),
+    bagreeiss = if_else(sagreeiss > 0, 1, 0)
   ) %>%
   ungroup(icow_set)
 
@@ -51,31 +53,35 @@ icow_part_cyr <- left_join(icow_part_cyr, icow_set_cldy)
 icow_part_cyr$one <- 1
 icow_part_cyr$agree <- ifelse(icow_part_cyr$sagree > 0, 1, 0)
 icow_part_cyr$agree <- ifelse(is.na(icow_part_cyr$agree), 0, icow_part_cyr$agree)
+icow_part_cyr$agree <- ifelse(icow_part_cyr$sagree > 0, 1, 0)
+icow_part_cyr$agree <- ifelse(is.na(icow_part_cyr$agree), 0, icow_part_cyr$agree)
 icow_part_cyr$agreeiss <- ifelse(icow_part_cyr$sagreeiss > 0, 1, 0)
 icow_part_cyr$agreeiss <- ifelse(is.na(icow_part_cyr$agreeiss), 0, icow_part_cyr$agreeiss)
 icow_part_cyr$midyear = ifelse(icow_part_cyr$midissyr == 1, icow_part_cyr$year, NA)
-# 
-# # Time until claim termination variables
-icow_part_cyr <- ungroup(icow_part_cyr %>%
-                           arrange(claimdy, year) %>%
-                           group_by(claimdy) %>%
-                           mutate(
-                             cltermyr = max(year),
-                             clterm = if_else(cltermyr == year, 1, 0),
-                             cumagr = cumsum(agreeiss),
-                             cummid = cumsum(midissyr),
-                             clstop = cumsum(one),
-                             clstart = clstop - 1,
-                             lastmid = LOCF(midyear)
-                           ))
-icow_part_cyr <- ungroup(icow_part_cyr %>%
-                           arrange(claimdy, cumagr, year) %>%
-                           group_by(claimdy, cumagr) %>%
-                           mutate(
-                             clagrspell = cumsum(one)
-                           ))
 
-icow_part_cyr <- left_join(icow_part_cyr, dat)
+# # Time until claim termination variables
+icow_part_cyr <- icow_part_cyr %>%
+  arrange(claimdy, year) %>%
+  group_by(claimdy) %>%
+  mutate(
+    cltermyr = max(year),
+    clterm = if_else(cltermyr == year, 1, 0),
+    cumagr = cumsum(agree),
+    cumagriss = cumsum(agreeiss),
+    cummid = cumsum(midissyr),
+    clstop = cumsum(one),
+    clstart = clstop - 1,
+    lastmid = LOCF(midyear)
+  ) %>% 
+  ungroup(icow_part_cyr)
+icow_part_cyr <- left_join(icow_part_cyr, datlag)
+# icow_part_cyr <- icow_part_cyr %>%
+#   arrange(claimdy, cumagr, year) %>%
+#   group_by(claimdy, cumagr) %>%
+#   mutate(
+#     clagrspell = cumsum(one)
+#   ) %>%
+#   ungroup(icow_part_cyr)
 
 #View(select(icow_part_cyr, claimdy, cumagr, year, clstart, clstop, clterm, agreeiss, clagrspell)) %>% filter(claimdy == 7801)
 icow_part_cyr$charlie <- ifelse(icow_part_cyr$depdymin_100 == 0, 0, log(icow_part_cyr$depdymin_100))
