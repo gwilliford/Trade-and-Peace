@@ -8,37 +8,52 @@ library(DescTools)
 
 if(!exists("dat")) dat <- load("./data/TradeOut.Rdata")
 
-dat$tsim <- tsim
-dat$msim <- msim
-dat$rsim <- rsim
+# dat$tsim <- tsim
+# dat$msim <- msim
+# dat$rsim <- rsim
+# dat$asim <- asim
 
-dat$terugt <- dat$tsim - dat$ln_trade
-dat$marugt <- dat$msim - dat$ln_trade
-dat$rivugt <- dat$rsim - dat$ln_trade
-dat$terugtdep1 <- dat$terugt / dat$ln_gdp1
-dat$terugtdep2 <- dat$terugt / dat$ln_gdp2
-dat$terugtdepmax <- rowMaxs(cbind(dat$terugtdep1, dat$terugtdep2))
-dat$rivugtdep1 <- dat$rivugt / dat$ln_gdp1
-dat$rivugtdep2 <- dat$rivugt / dat$ln_gdp2
-dat$rivugtdepmax <- rowMaxs(cbind(dat$rivugtdep1, dat$rivugtdep2))
-dat$marugtdep1 <- dat$marugt/ dat$ln_gdp1
-dat$marugtdep2 <- dat$marugt / dat$ln_gdp2
-dat$marugtdepmax <- rowMaxs(cbind(dat$marugtdep1, dat$marugtdep2))
+# dat$terugt <- dat$tsim - dat$ln_trade_100
+# dat$marugt <- dat$msim - dat$ln_trade_100
+# dat$rivugt <- dat$rsim - dat$ln_trade_100
+# dat$anyugt <- dat$asim - dat$ln_trade_100
+# dat$terugtdep1 <- exp(dat$terugt) / dat$gdp1
+# dat$terugtdep1 <- ifelse(dat$terugtdep1 == 0, 0, log(dat$terugtdep1))
+# dat$terugtdep2 <- dat$terugt / dat$ln_gdp2
+# dat$terugtdepmax <- rowMaxs(cbind(dat$terugtdep1, dat$terugtdep2))
+# dat$rivugtdep1 <- dat$rivugt / dat$ln_gdp1
+# dat$rivugtdep2 <- dat$rivugt / dat$ln_gdp2
+# dat$rivugtdepmax <- rowMaxs(cbind(dat$rivugtdep1, dat$rivugtdep2))
+# dat$marugtdep1 <- dat$marugt/ dat$ln_gdp1
+# dat$marugtdep2 <- dat$marugt / dat$ln_gdp2
+# dat$marugtdepmax <- rowMaxs(cbind(dat$marugtdep1, dat$marugtdep2))
+# dat$anyugtdep1 <- dat$anyugt/ dat$ln_gdp1
+# dat$anyugtdep2 <- dat$anyugt / dat$ln_gdp2
+# dat$anyugtdepmax <- rowMaxs(cbind(dat$anyugtdep1, dat$anyugtdep2))
+# dat$anyugtdep100_1 <- exp(dat$anyugt) / dat$gdp1
+# dat$anyugtdep100_1 <- ifelse(dat$anyugtdep1 == 0, 0, log(dat$anyugtdep1))
+# dat$anyugtdep100_2 <- exp(dat$anyugt) / dat$gdp2
+# dat$anyugtdep100_2 <- ifelse(dat$anyugtdep2 == 0, 0, log(dat$anyugtdep2))
 
-dat <- dat %>% arrange(dyad, year) %>% mutate(
-  lterugt = lag(terugt),
-  lterugtdep1 = lag(terugtdep1),
-  lterugtdep2 = lag(terugtdep2),
-  lterugtdepmax = lag(terugtdepmax),
-  lrivugt = lag(rivugt),
-  lrivugtdep1 = lag(rivugtdep1),
-  lrivugtdep2 = lag(rivugtdep2),
-  lrivugtdepmax = lag(rivugtdepmax),
-  lmarugt = lag(marugt),
-  lmarugtdep1 = lag(marugtdep1),
-  lmarugtdep2 = lag(marugtdep2),
-  lmarugtdepmax = lag(marugtdepmax)
-)
+
+# dat <- dat %>% arrange(dyad, year) %>% mutate(
+  # lterugt = lag(terugt),
+  # lterugtdep1 = lag(terugtdep1),
+  # lterugtdep2 = lag(terugtdep2),
+  # lterugtdepmax = lag(terugtdepmax),
+  # lrivugt = lag(rivugt),
+  # lrivugtdep1 = lag(rivugtdep1),
+  # lrivugtdep2 = lag(rivugtdep2),
+  # lrivugtdepmax = lag(rivugtdepmax),
+  # lmarugt = lag(marugt),
+  # lmarugtdep1 = lag(marugtdep1),
+  # lmarugtdep2 = lag(marugtdep2),
+  # lmarugtdepmax = lag(marugtdepmax), 
+#   lanyugt = lag(anyugt),
+#   lanyugtdep1 = lag(anyugtdep1),
+#   lanyugtdep2 = lag(anyugtdep2),
+#   lanyugtdepmax = lag(anyugtdepmax)
+# )
 
 # ##### Predicted trade values
 #   dat$terugt <- dat$tsim - dat$ln_trade
@@ -64,166 +79,268 @@ icow_set <- icow_set %>% filter(midiss == 0) # drop mids and non-territorial cla
 
 icow_set <- dplyr::select(icow_set, -mid)
 icow_set$agreeiss <- ifelse(is.na(icow_set$agreeiss), 0, icow_set$agreeiss)
-
-##### Collapse icow settlement data to dyad year format
-icow_set_dyr <- ungroup(icow_set %>% group_by(dyad, year) %>% summarize (
-  sagree = sum(agree),
-  sagreeiss = sum(agreeiss)
-))
-
-# Was an agreement reached?
-icow_set_dyr$bagree <- ifelse(icow_set_dyr$sagree > 0, 1, 0)
-icow_set_dyr$bagreeiss <- ifelse(icow_set_dyr$sagreeiss > 0, 1, 0)
-
-# Was an agreement that ended the claim reached?
 icow_set$ag_end_any  <- ifelse(icow_set$agreeiss == 1 & (icow_set$claimend == 1:2), 1, 0)
 icow_set$ag_end_part <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 1, 1, 0)
 icow_set$ag_end_full <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 2, 1, 0)
 
-##### ICOW aggregate claim data 
-icow_claimdy <- read_dta("./data/ICOWclaimdy.dta")
-icow_claimdy <- icow_claimdy # %>% filter(terriss == 1)
-icow_claimdy$reschdrop = ifelse(icow_claimdy$resolved %in% c(1, 2), 1, 0)
-icow_claimdy$resmil = ifelse(icow_claimdy$resolved == 7, 1, 0)
-icow_claimdy$restgtdrop = ifelse(icow_claimdy$resolved %in% c(8, 9), 1, 0)
-icow_claimdy$respleb = ifelse(icow_claimdy$resolved == 10, 1, 0)
-icow_claimdy$respset = ifelse(icow_claimdy$resolved %in% c(4, 12, 13, 14), 1, 0)
-icow_claimdy$resother = ifelse(icow_claimdy$resolved %in% c(5, 6, 11), 1, 0) # independence, actor leaves system, disp territory no longer exists
+##### Collapse icow settlement data to dyad year format
+# icow_set_cldy <- ungroup(icow_set %>% group_by(claimdy, year) %>% summarize(
+#   subsettle = 1,
+#   sagree = sum(agree),
+#   sagreeiss = sum(agreeiss),
+#   bagree = if_else(sagree > 0, 1, 0),
+#   bagreeiss = if_else(sagreeiss > 0, 1, 0),
+# ))
+icow_set_cldy <- ungroup(icow_set %>%
+                           group_by(claimdy, year) %>%
+                           summarize(
+                             subsettle = 1,
+                             sagree = sum(agree, na.rm = T),
+                             sagreeiss = sum(agreeiss, na.rm = T),
+                             bagree = if_else(sagree > 0, 1, 0),
+                             bagreeiss = if_else(sagreeiss > 0, 1, 0),
+                           ))
 
+##### ICOW aggregate claim data 
+# icow_claimdy <- read_dta("./data/ICOWclaimdy.dta")
+# icow_claimdy <- icow_claimdy # %>% filter(terriss == 1)
+# icow_claimdy$reschdrop = ifelse(icow_claimdy$resolved %in% c(1, 2), 1, 0)
+# icow_claimdy$resmil = ifelse(icow_claimdy$resolved == 7, 1, 0)
+# icow_claimdy$restgtdrop = ifelse(icow_claimdy$resolved %in% c(8, 9), 1, 0)
+# icow_claimdy$respleb = ifelse(icow_claimdy$resolved == 10, 1, 0)
+# icow_claimdy$respset = ifelse(icow_claimdy$resolved %in% c(4, 12, 13, 14), 1, 0)
+# icow_claimdy$resother = ifelse(icow_claimdy$resolved %in% c(5, 6, 11), 1, 0) # independence, actor leaves system, disp territory no longer exists
 
 ##### ICOW Partial Claim-Year Data
 icow_part_cyr <- read_dta("./data/ICOWdyadyr.dta")
 icow_part_cyr <- filter(icow_part_cyr, chal != 2220 & tgt != 2200)
-icow_part_cyr <- ungroup(icow_part_cyr %>% group_by(dyad) %>% mutate(
-  cltermyr = max(year)
-))
-icow_part_cyr$clstart <- icow_part_cyr$year - icow_part_cyr$year + 1
-icow_part_cyr$clstop <- icow_part_cyr$clstart + 1
-icow_part_cyr$clterm <- ifelse(icow_part_cyr$year == icow_part_cyr$cltermyr, 1, 0)
-icow_part_cyr <- left_join(icow_part_cyr, icow_set_dyr)
+
+# Merge settlement attempt variables into claim-year data
+icow_part_cyr <- left_join(icow_part_cyr, icow_set_cldy)
+icow_part_cyr$one <- 1
 icow_part_cyr$agree <- ifelse(icow_part_cyr$sagree > 0, 1, 0)
 icow_part_cyr$agree <- ifelse(is.na(icow_part_cyr$agree), 0, icow_part_cyr$agree)
 icow_part_cyr$agreeiss <- ifelse(icow_part_cyr$sagreeiss > 0, 1, 0)
 icow_part_cyr$agreeiss <- ifelse(is.na(icow_part_cyr$agreeiss), 0, icow_part_cyr$agreeiss)
-icow_part_cyr$agyear = ifelse(icow_part_cyr$agreeiss == 1, icow_part_cyr$year, NA)
-icow_part_cyr = ungroup(icow_part_cyr %>% group_by(claimdy) %>% mutate(
-  clyrmin = min(year),
-  yrlastag = LOCF(agyear),
-  agissb = if_else(year == clyrmin & agreeiss == 0, 1, agreeiss),
-))
-icow_part_cyr$agstop = icow_part_cyr$year - icow_part_cyr$yrlastag + 1
-icow_part_cyr$agstart = icow_part_cyr$agstop - 1
-icow_part_cyr$agyrb <- ifelse(icow_part_cyr$agissb == 1, icow_part_cyr$year, NA)
-icow_part_cyr = ungroup(icow_part_cyr %>% group_by(claimdy) %>% mutate(
-  yrlastagb = LOCF(agyrb)
-))
-icow_part_cyr$spstop <- icow_part_cyr$year - icow_part_cyr$yrlastagb + 1
-icow_part_cyr$spstart <- icow_part_cyr$spstop - 1
-icow_part_cyr <- left_join(icow_part_cyr, select(dat, -start)) %>% rownames_to_column('rownum')
-icow_part_cyr$rownum <- as.numeric(icow_part_cyr$rownum)
-icow_part_cyr <- filter(icow_part_cyr, !is.na(ccode1))
+icow_part_cyr$midyear = ifelse(icow_part_cyr$midissyr == 1, icow_part_cyr$year, NA)
+# 
+# # Time until claim termination variables
+icow_part_cyr <- ungroup(icow_part_cyr %>%
+                           arrange(claimdy, year) %>%
+                           group_by(claimdy) %>%
+                           mutate(
+                             cltermyr = max(year),
+                             clterm = if_else(cltermyr == year, 1, 0),
+                             cumagr = cumsum(agreeiss),
+                             cummid = cumsum(midissyr),
+                             clstop = cumsum(one),
+                             clstart = clstop - 1,
+                             lastmid = LOCF(midyear)
+                           ))
+icow_part_cyr <- ungroup(icow_part_cyr %>%
+                           arrange(claimdy, cumagr, year) %>%
+                           group_by(claimdy, cumagr) %>%
+                           mutate(
+                             clagrspell = cumsum(one)
+                           ))
 
-# View(icow_part_cyr[, c("claimdy", "year", "agyear", "clyrmin", "yrlastag", "agiss2", "agyr2", "yrlastag2", "start", "stop")])
+icow_part_cyr <- left_join(icow_part_cyr, dat)
 
+#View(select(icow_part_cyr, claimdy, cumagr, year, clstart, clstop, clterm, agreeiss, clagrspell)) %>% filter(claimdy == 7801)
+icow_part_cyr$charlie <- ifelse(icow_part_cyr$depdymin_100 == 0, 0, log(icow_part_cyr$depdymin_100))
+icow_part_cyr$mac <- icow_part_cyr$ln_trade_100 - icow_part_cyr$ln_gdp_min
+icow_part_cyr$dennis <- icow_part_cyr$gdp_min * 1000000
+icow_part_cyr$cricket <- icow_part_cyr$gdp_max * 1000000
+icow_part_cyr$dee <- icow_part_cyr$ln_trade - log(icow_part_cyr$dennis)
+icow_part_cyr$frank <- icow_part_cyr$ln_trade - log(icow_part_cyr$cricket)
+icow_part_cyr$mcpoyle <- icow_part_cyr$dee / icow_part_cyr$frank
+icow_part_cyr$ponderosa <- icow_part_cyr$dee - icow_part_cyr$frank
+icow_part_cyr$waitress <- (icow_part_cyr$trade - icow_part_cyr$dennis) / (icow_part_cyr$trade - icow_part_cyr$cricket)
+icow_part_cyr$fattymagoo <- log(icow_part_cyr$waitress)
 
-subc1 <- icow_part_cyr %>% filter(chal == ccode1 & !is.na(ccode1)) %>% 
-  select(ends_with("1"), claimdy, chal, tgt, ccode1, ccode2, year, rownum) %>% 
-  rename_at(vars(ends_with("1")), funs(str_replace(., "1", "_chal"))) 
-subc2 <- icow_part_cyr %>% filter(chal == ccode2 & !is.na(ccode2)) %>% 
-  select(ends_with("2"), claimdy, chal, tgt, ccode1, ccode2, year, rownum) %>% 
-  rename_at(vars(ends_with("2")), funs(str_replace(., "2", "_chal"))) 
-subt1 <- icow_part_cyr %>% filter(chal == ccode1 & !is.na(ccode1)) %>% 
-  select(ends_with("2"), claimdy, chal, tgt, ccode1, ccode2, year, rownum) %>% 
-  rename_at(vars(ends_with("2")), funs(str_replace(., "2", "_tgt"))) 
-subt2 <- icow_part_cyr %>% filter(chal == ccode2 & !is.na(ccode2)) %>% 
-  select(ends_with("2"), claimdy, chal, tgt, ccode1, ccode2, year, rownum) %>% 
-  rename_at(vars(ends_with("1")), funs(str_replace(., "1", "_tgt"))) 
-subcf <- cbind(select(subc1, -ccode_chal, -chal), select(subt1, -ccode_tgt, -year, -rownum, -claimdy, -tgt))
-subtf <- cbind(select(subc2, -ccode_chal, -chal), select(subt2, -ccode_tgt, -year, -rownum, -claimdy, -tgt))
+icow_part_cyr = icow_part_cyr %>% mutate(
+  pikachu = trade_100/(gdp1) * 100,
+  squirtle = trade_100/(gdp2) * 100,
+  bulbasaur = pikachu * squirtle, 
+  charmander = rowMins(cbind(pikachu, squirtle)),
+  psyduck = rowMaxs(cbind(pikachu, squirtle)), 
+  staryu = if_else(ccode1 == chal, pikachu, squirtle),
+  starmie = if_else(ccode1 == tgt, pikachu, squirtle)
+)
+icow_part_cyr$pikachu2 <- ifelse(icow_part_cyr$pikachu > 1, 1, icow_part_cyr$pikachu)
+summary(icow_part_cyr$bulbasaur) * 100
+
+icow_part_cyr$lncaprat <- log(icow_part_cyr$lcaprat)
+icow_part_cyr$igosum <- ifelse(is.na(icow_part_cyr$igosum), 0, icow_part_cyr$igosum)
+icow_part_cyr$c <- icow_part_cyr$clstop
+icow_part_cyr$c2 <- icow_part_cyr$clstop^2 / 1000
+icow_part_cyr$c3 <- icow_part_cyr$clstop^3 / 10000
 
 # 
-# icow_part_ct2 <- arrange(subtf, as.numeric(rownum))
+# # icow_part_cyr$clstart <- icow_part_cyr$cltermyr - icow_part_cyr$year + 1
+# # icow_part_cyr$clstop <- icow_part_cyr$clstart + 1
+# # Time until agreement variables
+# icow_part_cyr$agyear = ifelse(icow_part_cyr$agreeiss == 1, icow_part_cyr$year, NA)
+# icow_part_cyr$cumagr = ifelse(icow_part_cyr$agreeiss == 1, icow_part_cyr$cumagr - 1, icow_part_cyr$cumagr)
+# icow_part_cyr = ungroup(icow_part_cyr %>% 
+#                           group_by(claimdy, cumagr) %>%
+#                           mutate(
+#                             #clyrmin = min(year),
+#                             agstart = cumsum(1),
+#                             agstop = agstart + 1
+#                           )
+# )
+# icow_part_cyr$agstop <- ifelse(icow_part_cyr$cumagr == 0, NA, icow_part_cyr$agstop)
+# # icow_part_cyr$terminated <- ifelse()
+# # is.na()
+# # icow_part_cyr$agstop <- ifelse(icow_part_cyr$year > icow_part_cyr$lastmid, NA, icow_part_cyr$agstop)
+# # icow_part_cyr$agstop <- icow_part_cyr %>% mutate(
+# #   if_else(agstop > )
+# # )
+# icow_part_cyr$agstart <- ifelse(icow_part_cyr$cumagr == 0, NA, icow_part_cyr$agstart)
+# # icow_part_cyr$agstart <- ifelse(icow_part_cyr$year > icow_part_cyr$lastmid, NA, icow_part_cyr$agstart)
 # 
-# subf <- rbind(subcf, subtf)
-# icow_part_cyr_ct <- cbind(icow_part_cyr, subf)
+# 
+# 
+# 
+# # Time from claimstart to MID variables
+# icow_part_cyr$cummid = ifelse(icow_part_cyr$midissyr == 1, icow_part_cyr$cummid - 1, icow_part_cyr$cummid)
+# icow_part_cyr = ungroup(icow_part_cyr %>% 
+#                           group_by(claimdy, cummid) %>%
+#                           mutate(
+#                             midstop = cumsum(one),
+#                             midstart = midstop - 1
+#                           )
+# )
+# icow_part_cyr$cummid = ifelse(icow_part_cyr$cummid == 0, NA, icow_part_cyr$cummid)
+# icow_part_cyr$midstart = ifelse(icow_part_cyr$cummid == 0, NA, icow_part_cyr$midstart)
+# icow_part_cyr$midstop = ifelse(icow_part_cyr$cummid == 0, NA, icow_part_cyr$midstop)
+# icow_part_cyr$midfail = ifelse(icow_part_cyr$cummid == 0, NA, icow_part_cyr$midissyr)
+# 
+# 
+# test <- select(icow_part_cyr, claimdy, year, clstart, clstop, cltermyr, clterm, cumagr, agreeiss, agstart, agstop, midissyr, midyear, lastmid, cummid, midstart, midstop, midfail) %>% filter(claimdy == 7801);View(test)
+#                            # yrlastag = LOCF(agyear),
+#   #agspell = 
+#   #agissb = if_else(year == clyrmin & agreeiss == 0, 1, agreeiss),
+# 
+# 
+# # icow_part_cyr$agstop = icow_part_cyr$year - icow_part_cyr$yrlastag + 1
+# # icow_part_cyr$agstart = icow_part_cyr$agstop - 1
+# # icow_part_cyr$agyrb <- ifelse(icow_part_cyr$agissb == 1, icow_part_cyr$year, NA)
+# # icow_part_cyr = ungroup(icow_part_cyr %>% group_by(claimdy) %>% mutate(
+# #   yrlastagb = LOCF(agyrb)
+# # ))
+# # icow_part_cyr$spstop <- icow_part_cyr$year - icow_part_cyr$yrlastagb + 1
+# # icow_part_cyr$spstart <- icow_part_cyr$spstop - 1
+#icow_part_cyr <- left_join(icow_part_cyr, datout) #select(dat)) %>% rownames_to_column('rownum')
+
+# save.dta13(icow_part_cyr, "./data/icow_part_cyr.dta")
+
+# # icow_part_cyr$rownum <- as.numeric(icow_part_cyr$rownum)
+# icow_part_cyr <- filter(icow_part_cyr, !is.na(ccode1))
+# 
+# # View(icow_part_cyr[, c("claimdy", "year", "agyear", "clyrmin", "yrlastag", "agiss2", "agyr2", "yrlastag2", "start", "stop")])
+# 
+# 
+# # subc1 <- icow_part_cyr %>% filter(chal == ccode1 & !is.na(ccode1)) %>% 
+# #   select(ends_with("1"), claimdy, chal, tgt, ccode1, ccode2, year, rownum) %>% 
+# #   rename_at(vars(ends_with("1")), funs(str_replace(., "1", "_chal"))) 
+# # subc2 <- icow_part_cyr %>% filter(chal == ccode2 & !is.na(ccode2)) %>% 
+# #   select(ends_with("2"), claimdy, chal, tgt, ccode1, ccode2, year, rownum) %>% 
+# #   rename_at(vars(ends_with("2")), funs(str_replace(., "2", "_chal"))) 
+# # subt1 <- icow_part_cyr %>% filter(chal == ccode1 & !is.na(ccode1)) %>% 
+# #   select(ends_with("2"), claimdy, chal, tgt, ccode1, ccode2, year, rownum) %>% 
+# #   rename_at(vars(ends_with("2")), funs(str_replace(., "2", "_tgt"))) 
+# # subt2 <- icow_part_cyr %>% filter(chal == ccode2 & !is.na(ccode2)) %>% 
+# #   select(ends_with("2"), claimdy, chal, tgt, ccode1, ccode2, year, rownum) %>% 
+# #   rename_at(vars(ends_with("1")), funs(str_replace(., "1", "_tgt"))) 
+# # subcf <- cbind(select(subc1, -ccode_chal, -chal), select(subt1, -ccode_tgt, -year, -rownum, -claimdy, -tgt))
+# # subtf <- cbind(select(subc2, -ccode_chal, -chal), select(subt2, -ccode_tgt, -year, -rownum, -claimdy, -tgt))
+# 
+# # 
+# # icow_part_ct2 <- arrange(subtf, as.numeric(rownum))
+# # 
+# # subf <- rbind(subcf, subtf)
+# # icow_part_cyr_ct <- cbind(icow_part_cyr, subf)
+# 
+# 
+# 
+# # Create challenger/target dataset
+# # sub1 contains vars for chal when chal == ccode1,
+# # sub2 contains vars for target when target == ccode1
+# # sub3 contains vars for chal when chal == ccode2
+# # sub4 contains vars for tgt when tgt == ccode2
+#   # Combine sub1 and sub4 to get variables for chal(ccode1)-tgt(ccode2) pair
+#   # Combine sub2 and sub3 to get variables for chal(ccode2)-tgt(ccode1) pair
+# vl1 <- colnames(dplyr::select(icow_part_cyr, ends_with("1")))
+#   vchal <- gsub('.{0,1}$', '', vl1)
+#   vchal <- paste0(vchal, '_chal')
+#   vl1 <- c(vl1, "rownum", "year")
+# vl2 <- colnames(dplyr::select(icow_part_cyr, ends_with("2")))
+#   vtgt <- gsub('.{0,1}$', '', vl2)
+#   vtgt <- paste0(vtgt, '_tgt')
+#   vl2 <- c(vl2, "rownum", "year")
+# 
+#   # dim(icow_part_cyr[icow_part_cyr$chal == icow_part_cyr$ccode1, ])
+#   # dim(icow_part_cyr[icow_part_cyr$chal == icow_part_cyr$ccode1, ])
+#   # sub1n <- icow_part_cyr %>% filter(ccode1 == chal)
+#   # sub2n <- icow_part_cyr %>% filter(ccode1 == tgt)
+#   # sub3n <- icow_part_cyr %>% filter(ccode1 != chal & ccode1 != tgt)
+#   #   select(ends_with("2"), -y2) %>%
+#   #   # sub1n <- icow_part_cyr %>% filter(ccode1 == chal) %>%
+#   #   # select(ends_with("2"), -y2)
+# sub1 <- icow_part_cyr %>%
+#   #rownames_to_column("rownum") %>%
+#   filter(ccode1 == chal & !is.na(ccode1)) %>%
+#   select_if(names(.) %in% c(vl1, "chal")) # var1 assigend to chal
+# sub2 <- icow_part_cyr %>%
+#   #rownames_to_column('rownum') %>%
+#   filter(ccode1 == tgt  & !is.na(ccode1))  %>%
+#   select_if(names(.) %in% c(vl1, "tgt")) # var1 assigend to tgt
+# sub3 <- icow_part_cyr %>%
+#   #rownames_to_column("rownum") %>%
+#   filter(ccode2 == chal & !is.na(ccode2)) %>%
+#   select_if(names(.) %in% c(vl2, "chal")) #var2 assigned to chal
+# sub4 <- icow_part_cyr %>%
+#   #rownames_to_column('rownum') %>%
+#   filter(ccode2 == tgt & !is.na(ccode2))  %>%
+#   select_if(names(.) %in% c(vl2, "tgt")) # Var2 assigned to target
+# colnames(sub1) <- c("rownum", "chal", "year", vchal)
+# colnames(sub2) <- c("rownum", "tgt", "year", vtgt)
+# colnames(sub3) <- c("rownum", "chal", "year", vchal)
+# colnames(sub4) <- c("rownum", "tgt", "year", vtgt)
+# # subc <- icow_part_cyr[icow_part_cyr$chal == icow_part_cyr$ccode1, ]
+# # subt <- icow_part_cyr[icow_part_cyr$chal == icow_part_cyr$ccode2, ]
+# # suba <- icow_part_cyr[(icow_part_cyr$chal == icow_part_cyr$ccode1) & (icow_part_cyr$chal == icow_part_cyr$ccode2),]
+# 
+# subc <- cbind(dplyr::select(sub1, -ccode_chal), dplyr::select(sub4, -ccode_tgt, -year, -rownum))
+# subt <- cbind(dplyr::select(sub2, -ccode_tgt), dplyr::select(sub3, -ccode_chal, -year, -rownum))
+# subf <- arrange(rbind(subc, subt), as.numeric(rownum)) %>% select(-chal, -tgt)
+# # icow_part_ct <- arrange(subcf, as.numeric(rownum))
+# # icow_part_ct <- rbind(subcf, arrange(subtf, as.numeric(rownum)))a
+# icow_part_ct <- left_join(icow_part_cyr, subf, by = c("rownum", "year"))
+# # Check
+# # View(icow_part_ct %>% select(dyad, year, ccode1, ccode2, chal, tgt, ln_gdp1, ln_gdp_chal, ln_gdp2, ln_gdp_tgt))
 
 
-
-# Create challenger/target dataset
-# sub1 contains vars for chal when chal == ccode1,
-# sub2 contains vars for target when target == ccode1
-# sub3 contains vars for chal when chal == ccode2
-# sub4 contains vars for tgt when tgt == ccode2
-  # Combine sub1 and sub4 to get variables for chal(ccode1)-tgt(ccode2) pair
-  # Combine sub2 and sub3 to get variables for chal(ccode2)-tgt(ccode1) pair
-vl1 <- colnames(dplyr::select(icow_part_cyr, ends_with("1")))
-  vchal <- gsub('.{0,1}$', '', vl1)
-  vchal <- paste0(vchal, '_chal')
-  vl1 <- c(vl1, "rownum", "year")
-vl2 <- colnames(dplyr::select(icow_part_cyr, ends_with("2")))
-  vtgt <- gsub('.{0,1}$', '', vl2)
-  vtgt <- paste0(vtgt, '_tgt')
-  vl2 <- c(vl2, "rownum", "year")
-
-  dim(icow_part_cyr[icow_part_cyr$chal == icow_part_cyr$ccode1, ])
-  dim(icow_part_cyr[icow_part_cyr$chal == icow_part_cyr$ccode1, ])
-  sub1n <- icow_part_cyr %>% filter(ccode1 == chal)
-  sub2n <- icow_part_cyr %>% filter(ccode1 == tgt)
-  # sub3n <- icow_part_cyr %>% filter(ccode1 != chal & ccode1 != tgt)
-  #   select(ends_with("2"), -y2) %>%
-  #   # sub1n <- icow_part_cyr %>% filter(ccode1 == chal) %>%
-  #   # select(ends_with("2"), -y2)
-sub1 <- icow_part_cyr %>%
-  #rownames_to_column("rownum") %>%
-  filter(ccode1 == chal & !is.na(ccode1)) %>%
-  select_if(names(.) %in% c(vl1, "chal")) # var1 assigend to chal
-sub2 <- icow_part_cyr %>%
-  #rownames_to_column('rownum') %>%
-  filter(ccode1 == tgt  & !is.na(ccode1))  %>%
-  select_if(names(.) %in% c(vl1, "tgt")) # var1 assigend to tgt
-sub3 <- icow_part_cyr %>%
-  #rownames_to_column("rownum") %>%
-  filter(ccode2 == chal & !is.na(ccode2)) %>%
-  select_if(names(.) %in% c(vl2, "chal")) #var2 assigned to chal
-sub4 <- icow_part_cyr %>%
-  #rownames_to_column('rownum') %>%
-  filter(ccode2 == tgt & !is.na(ccode2))  %>%
-  select_if(names(.) %in% c(vl2, "tgt")) # Var2 assigned to target
-colnames(sub1) <- c("rownum", "chal", "year", vchal)
-colnames(sub2) <- c("rownum", "tgt", "year", vtgt)
-colnames(sub3) <- c("rownum", "chal", "year", vchal)
-colnames(sub4) <- c("rownum", "tgt", "year", vtgt)
-# subc <- icow_part_cyr[icow_part_cyr$chal == icow_part_cyr$ccode1, ]
-# subt <- icow_part_cyr[icow_part_cyr$chal == icow_part_cyr$ccode2, ]
-# suba <- icow_part_cyr[(icow_part_cyr$chal == icow_part_cyr$ccode1) & (icow_part_cyr$chal == icow_part_cyr$ccode2),]
-
-subc <- cbind(dplyr::select(sub1, -ccode_chal), dplyr::select(sub4, -ccode_tgt, -year, -rownum))
-subt <- cbind(dplyr::select(sub2, -ccode_tgt), dplyr::select(sub3, -ccode_chal, -year, -rownum))
-subf <- arrange(rbind(subc, subt), as.numeric(rownum)) %>% select(-chal, -tgt)
-# icow_part_ct <- arrange(subcf, as.numeric(rownum))
-# icow_part_ct <- rbind(subcf, arrange(subtf, as.numeric(rownum)))
-icow_part_ct <- left_join(icow_part_cyr, subf, by = c("rownum", "year"))
-View(icow_part_ct %>% select(dyad, year, ccode1, ccode2, chal, tgt, ln_gdp1, ln_gdp_chal, ln_gdp2, ln_gdp_tgt))
-
-
-
-rbind(subcf, subtf)
-%>%
-  rename_at(vars(ends_with("2")), funs(str_replace(., "2", "_tgt"))) %>% 
-
-%>%
-  rename_all(funs(str_replace(., "1", "chal")))
-  
-  
- )) %>% 
-  rename_at(vars(ends_with("2")), funs(str_replace(., "2", "_tgt"))) %>%
-  select(ends_with("_chal"), ends_with("_tgt"), claimdy, dyad, year)
-subt <- icow_part_cyr %>% filter(chal == ccode2 & !is.na(ccode2)) %>%
-  rename_at(vars(ends_with("1")), funs(str_replace(., "1", "_tgt"))) %>% 
-  rename_at(vars(ends_with("2")), funs(str_replace(., "2", "_chal")))  %>%
-  select(ends_with("_chal"), ends_with("_tgt"), claimdy, dyad, year)
-icow_part_ct <- arrange(subc, .)
-icow_part_cyr <- full_join(icow_part_ct, icow_part_cyr, by = c("claimdy", "year"))
+# 
+# rbind(subcf, subtf)
+# %>%
+#   rename_at(vars(ends_with("2")), funs(str_replace(., "2", "_tgt"))) %>% 
+# 
+# %>%
+#   rename_all(funs(str_replace(., "1", "chal")))
+#   
+#   
+#  )) %>% 
+#   rename_at(vars(ends_with("2")), funs(str_replace(., "2", "_tgt"))) %>%
+#   select(ends_with("_chal"), ends_with("_tgt"), claimdy, dyad, year)
+# subt <- icow_part_cyr %>% filter(chal == ccode2 & !is.na(ccode2)) %>%
+#   rename_at(vars(ends_with("1")), funs(str_replace(., "1", "_tgt"))) %>% 
+#   rename_at(vars(ends_with("2")), funs(str_replace(., "2", "_chal")))  %>%
+#   select(ends_with("_chal"), ends_with("_tgt"), claimdy, dyad, year)
+# icow_part_ct <- arrange(subc, .)
+# icow_part_cyr <- full_join(icow_part_ct, icow_part_cyr, by = c("claimdy", "year"))
 
 
 # # suba <- icow_part_cyr[(icow_part_cyr$chal == icow_part_cyr$ccode1) & (icow_part_cyr$chal == icow_part_cyr$ccode2),]
@@ -324,3 +441,16 @@ icow_part_cyr <- full_join(icow_part_ct, icow_part_cyr, by = c("claimdy", "year"
 #   # 
 #   # with(icow_part_dyr, summary(gdp1 + gdp2))
 #   
+
+# saveRDS(icow_part_ct, "./data/icow_part_ct.RDS")
+# a <- icow_part_cyr #%>% select(claimdy, year, clstart, clstop, agreeiss, midissyr)
+# 
+# stata("my_do_file.do", 
+#       stata.path = "/Applications/Stata/StataMP.app/Contents/MacOS/stata-mp", # yours probably differs: use the chooseStataBin() command on windows or linux machines; on Macs, right click on the Stata app, select "Show Package Contents", then see what's in the Contents/MacOS/ directory
+#       stata.version = 13)  # again, specify what _you_ have
+# options("RStata.StataPath" = "/Applications/Stata/StataMP.app/Contents/MacOS/stata-mp")
+# options("RStata.StataVersion" = 13)
+icow_part_cyr$tdepmin <- icow_part_cyr$dee
+icow_part_cyr$tdepmax <- icow_part_cyr$frank
+icow_part_cyr$tdepavg <- (icow_part_cyr$tdepmin + icow_part_cyr$tdepmax) / 2
+icow_part_cyr$tdepdif <- icow_part_cyr$tdepmax - icow_part_cyr$tdepmin
