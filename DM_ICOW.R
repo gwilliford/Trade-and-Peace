@@ -9,32 +9,28 @@ library(DescTools)
 if(!exists("dat")) datlag <- load("./data/TradeInputs.RDS")
 
 ##### ICOW settlement data
-icow_set <- read_dta("./data/ICOWsettle.dta")
-icow_set <- icow_set %>% filter(midiss == 0) # drop mids and non-territorial claims
+icow_set <- read_dta("./data/ICOWsettle.dta") %>%
+  filter(midiss == 0) %>% 
+  select(-mid)
 
-icow_set <- dplyr::select(icow_set, -mid)
+# Create agreement dummies
+icow_set$agree <- ifelse(is.na(icow_set$agree), 0, icow_set$agree)
 icow_set$agreeiss <- ifelse(is.na(icow_set$agreeiss), 0, icow_set$agreeiss)
 icow_set$ag_end_any  <- ifelse(icow_set$agreeiss == 1 & (icow_set$claimend == 1:2), 1, 0)
 icow_set$ag_end_part <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 1, 1, 0)
 icow_set$ag_end_full <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 2, 1, 0)
 
 ##### Collapse icow settlement data to dyad year format
-# icow_set_cldy <- ungroup(icow_set %>% group_by(claimdy, year) %>% summarize(
-#   subsettle = 1,
-#   sagree = sum(agree),
-#   sagreeiss = sum(agreeiss),
-#   bagree = if_else(sagree > 0, 1, 0),
-#   bagreeiss = if_else(sagreeiss > 0, 1, 0),
-# ))
-icow_set_cldy <- ungroup(icow_set %>%
-                           group_by(claimdy, year) %>%
-                           summarize(
-                             subsettle = 1,
-                             sagree = sum(agree, na.rm = T),
-                             sagreeiss = sum(agreeiss, na.rm = T),
-                             bagree = if_else(sagree > 0, 1, 0),
-                             bagreeiss = if_else(sagreeiss > 0, 1, 0),
-                           ))
+
+icow_set_cldy <- icow_set %>%
+  group_by(claimdy, year) %>%
+  summarize(
+    sagree = sum(agree, na.rm = T),
+    sagreeiss = sum(agreeiss, na.rm = T),
+    bagree = if_else(sagree > 0, 1, 0),
+    bagreeiss = if_else(sagreeiss > 0, 1, 0),
+  ) %>%
+  ungroup(icow_set)
 
 ##### ICOW aggregate claim data 
 # icow_claimdy <- read_dta("./data/ICOWclaimdy.dta")
@@ -47,8 +43,8 @@ icow_set_cldy <- ungroup(icow_set %>%
 # icow_claimdy$resother = ifelse(icow_claimdy$resolved %in% c(5, 6, 11), 1, 0) # independence, actor leaves system, disp territory no longer exists
 
 ##### ICOW Partial Claim-Year Data
-icow_part_cyr <- read_dta("./data/ICOWdyadyr.dta")
-icow_part_cyr <- filter(icow_part_cyr, chal != 2220 & tgt != 2200)
+icow_part_cyr <- read_dta("./data/ICOWdyadyr.dta") %>%
+  filter(chal != 2220 & tgt != 2200)
 
 # Merge settlement attempt variables into claim-year data
 icow_part_cyr <- left_join(icow_part_cyr, icow_set_cldy)
