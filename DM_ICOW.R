@@ -66,24 +66,60 @@ icow_part_cyr <- icow_part_cyr %>%
   mutate(
     cltermyr = max(year),
     clterm = if_else(cltermyr == year, 1, 0),
+    clstop = cumsum(one),
+    clstart = clstop - 1,
+    
     cumagr = cumsum(agree),
     cumagriss = cumsum(agreeiss),
     cummid = cumsum(midissyr),
-    clstop = cumsum(one),
-    clstart = clstop - 1,
+    
+    cumagr = if_else(agree == 1, cumagr - 1, cumagr),
+    cumagriss = if_else(agreeiss == 1, cumagriss - 1, cumagriss),
+    cummid = if_else(midissyr == 1, cummid - 1, cummid),
+    
     lastmid = LOCF(midyear)
   ) %>% 
   ungroup(icow_part_cyr)
-icow_part_cyr <- left_join(icow_part_cyr, datlag)
-# icow_part_cyr <- icow_part_cyr %>%
-#   arrange(claimdy, cumagr, year) %>%
-#   group_by(claimdy, cumagr) %>%
-#   mutate(
-#     clagrspell = cumsum(one)
-#   ) %>%
-#   ungroup(icow_part_cyr)
 
-#View(select(icow_part_cyr, claimdy, cumagr, year, clstart, clstop, clterm, agreeiss, clagrspell)) %>% filter(claimdy == 7801)
+# Time until agreement variables
+icow_part_cyr <- icow_part_cyr %>%
+  group_by(claimdy, cumagr) %>%
+  mutate(
+    agtermyr = max(year),
+    agterm = if_else(agtermyr == year, 1, 0),
+    agstop = cumsum(one),
+    agstart = agstop - 1,
+  ) %>% 
+  ungroup(icow_part_cyr)
+
+# Time until agreeiss variables
+icow_part_cyr <- icow_part_cyr %>%
+  group_by(claimdy, cumagriss) %>%
+  mutate(
+    agisstermyr = max(year),
+    agissterm = if_else(agisstermyr == year, 1, 0),
+    agiss_stop = cumsum(one),
+    agiss_start = agiss_stop - 1,
+  ) %>% 
+  ungroup(icow_part_cyr)
+
+icow_part_cyr <- icow_part_cyr %>%
+  group_by(claimdy, cummid) %>%
+  mutate(
+    midtermyr = max(year),
+    midterm = if_else(midtermyr == year, 1, 0),
+    midstop = cumsum(one),
+    midstart = midstop - 1,
+  ) %>% 
+  ungroup(icow_part_cyr)
+icow_part_cyr <- left_join(icow_part_cyr, datlag)
+
+# View(icow_part_cyr[, c("claimdy", "year", 
+                       "agree", "cumagr", "agstart", "agstop", "agtermyr", "agterm",
+                       "midissyr", "cummid", "midstart", "midstop", "midterm", "midtermyr",
+                       "agreeiss", "cumagriss", "agiss_start", "agiss_stop", "agisstermyr", "agissterm")])
+# View(select(icow_part_cyr, claimdy, cumagr, year, clstart, clstop, clterm, agreeiss, clagrspell)) %>% filter(claimdy == 7801)
+
 icow_part_cyr$charlie <- ifelse(icow_part_cyr$depdymin_100 == 0, 0, log(icow_part_cyr$depdymin_100))
 icow_part_cyr$mac <- icow_part_cyr$ln_trade_100 - icow_part_cyr$ln_gdp_min
 icow_part_cyr$dennis <- icow_part_cyr$gdp_min * 1000000
@@ -113,33 +149,6 @@ icow_part_cyr$c <- icow_part_cyr$clstop
 icow_part_cyr$c2 <- icow_part_cyr$clstop^2 / 1000
 icow_part_cyr$c3 <- icow_part_cyr$clstop^3 / 10000
 
-# 
-# # icow_part_cyr$clstart <- icow_part_cyr$cltermyr - icow_part_cyr$year + 1
-# # icow_part_cyr$clstop <- icow_part_cyr$clstart + 1
-# # Time until agreement variables
-# icow_part_cyr$agyear = ifelse(icow_part_cyr$agreeiss == 1, icow_part_cyr$year, NA)
-# icow_part_cyr$cumagr = ifelse(icow_part_cyr$agreeiss == 1, icow_part_cyr$cumagr - 1, icow_part_cyr$cumagr)
-# icow_part_cyr = ungroup(icow_part_cyr %>% 
-#                           group_by(claimdy, cumagr) %>%
-#                           mutate(
-#                             #clyrmin = min(year),
-#                             agstart = cumsum(1),
-#                             agstop = agstart + 1
-#                           )
-# )
-# icow_part_cyr$agstop <- ifelse(icow_part_cyr$cumagr == 0, NA, icow_part_cyr$agstop)
-# # icow_part_cyr$terminated <- ifelse()
-# # is.na()
-# # icow_part_cyr$agstop <- ifelse(icow_part_cyr$year > icow_part_cyr$lastmid, NA, icow_part_cyr$agstop)
-# # icow_part_cyr$agstop <- icow_part_cyr %>% mutate(
-# #   if_else(agstop > )
-# # )
-# icow_part_cyr$agstart <- ifelse(icow_part_cyr$cumagr == 0, NA, icow_part_cyr$agstart)
-# # icow_part_cyr$agstart <- ifelse(icow_part_cyr$year > icow_part_cyr$lastmid, NA, icow_part_cyr$agstart)
-# 
-# 
-# 
-# 
 # # Time from claimstart to MID variables
 # icow_part_cyr$cummid = ifelse(icow_part_cyr$midissyr == 1, icow_part_cyr$cummid - 1, icow_part_cyr$cummid)
 # icow_part_cyr = ungroup(icow_part_cyr %>% 
@@ -157,28 +166,7 @@ icow_part_cyr$c3 <- icow_part_cyr$clstop^3 / 10000
 # 
 # test <- select(icow_part_cyr, claimdy, year, clstart, clstop, cltermyr, clterm, cumagr, agreeiss, agstart, agstop, midissyr, midyear, lastmid, cummid, midstart, midstop, midfail) %>% filter(claimdy == 7801);View(test)
 #                            # yrlastag = LOCF(agyear),
-#   #agspell = 
-#   #agissb = if_else(year == clyrmin & agreeiss == 0, 1, agreeiss),
-# 
-# 
-# # icow_part_cyr$agstop = icow_part_cyr$year - icow_part_cyr$yrlastag + 1
-# # icow_part_cyr$agstart = icow_part_cyr$agstop - 1
-# # icow_part_cyr$agyrb <- ifelse(icow_part_cyr$agissb == 1, icow_part_cyr$year, NA)
-# # icow_part_cyr = ungroup(icow_part_cyr %>% group_by(claimdy) %>% mutate(
-# #   yrlastagb = LOCF(agyrb)
-# # ))
-# # icow_part_cyr$spstop <- icow_part_cyr$year - icow_part_cyr$yrlastagb + 1
-# # icow_part_cyr$spstart <- icow_part_cyr$spstop - 1
-#icow_part_cyr <- left_join(icow_part_cyr, datout) #select(dat)) %>% rownames_to_column('rownum')
 
-# save.dta13(icow_part_cyr, "./data/icow_part_cyr.dta")
-
-# # icow_part_cyr$rownum <- as.numeric(icow_part_cyr$rownum)
-# icow_part_cyr <- filter(icow_part_cyr, !is.na(ccode1))
-# 
-# # View(icow_part_cyr[, c("claimdy", "year", "agyear", "clyrmin", "yrlastag", "agiss2", "agyr2", "yrlastag2", "start", "stop")])
-# 
-# 
 # # subc1 <- icow_part_cyr %>% filter(chal == ccode1 & !is.na(ccode1)) %>% 
 # #   select(ends_with("1"), claimdy, chal, tgt, ccode1, ccode2, year, rownum) %>% 
 # #   rename_at(vars(ends_with("1")), funs(str_replace(., "1", "_chal"))) 
