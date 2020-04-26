@@ -248,17 +248,24 @@ dat$ln_depdymaxmil = ifelse(dat$depdymaxmil == 0, 0, log(dat$depdymaxmil))
 # summary(log(dat$ln_trade_100/dat$ln_gdp1))
 
 # Dyadic GDP variables
-dat$gdpt = dat$gdp1 + dat$gdp2
-dat$lngdpt = log(dat$gdpt)
-dat$gdpcapt = dat$gdpcap1 + dat$gdpcap2
-dat$lngdpcapt = log(dat$gdpcapt)
 dat$gdp_min = rowMins(cbind(dat$gdp1, dat$gdp2))
 dat$gdp_max = rowMaxs(cbind(dat$gdp1, dat$gdp2))
-dat$ln_gdp_min = rowMins(cbind(dat$ln_gdp1, dat$ln_gdp2))
-dat$ln_gdp_max = rowMaxs(cbind(dat$ln_gdp1, dat$ln_gdp2))
-dat$ln_gdpcap_min = rowMins(cbind(dat$ln_gdpcap1, dat$ln_gdpcap2))
-dat$ln_gdpcap_max = rowMaxs(cbind(dat$ln_gdpcap1, dat$ln_gdpcap2))
-dat$pch_gdp_min = rowMins(cbind(dat$pch_gdp1, dat$pch_gdp2))
+dat$gdpt = dat$gdp1 + dat$gdp2
+
+dat$ln_gdpmin = rowMins(cbind(dat$ln_gdp1, dat$ln_gdp2))
+dat$ln_gdpmax = rowMaxs(cbind(dat$ln_gdp1, dat$ln_gdp2))
+dat$ln_gdpt = log(dat$gdpt)
+
+dat$ln_gdpcapmin = rowMins(cbind(dat$ln_gdpcap1, dat$ln_gdpcap2))
+dat$ln_gdpcapmax = rowMaxs(cbind(dat$ln_gdpcap1, dat$ln_gdpcap2))
+dat$gdpcapt = dat$gdpcap1 + dat$gdpcap2
+
+dat$ln_gdpcapmin = rowMins(cbind(dat$ln_gdpcap1, dat$ln_gdpcap2))
+dat$ln_gdpcapmax = rowMaxs(cbind(dat$ln_gdpcap1, dat$ln_gdpcap2))
+dat$ln_gdpcapt = log(dat$gdpcapt)
+
+# percent change gdp dyadic
+# dat$pch_gdp_min = rowMins(cbind(dat$pch_gdp1, dat$pch_gdp2))
 
 
 # Other dyadic variables
