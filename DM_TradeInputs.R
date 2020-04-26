@@ -219,29 +219,33 @@ dat$depdy1 = dat$trade/dat$gdp1 #depdy1 is 1's dependence on 2 (exports/gdpcap)
 dat$depdy2 = dat$trade/dat$gdp2  # higher values indicate that 2 is more dependent on trade
 dat$depdymax = rowMaxs(cbind(dat$depdy1, dat$depdy2))
 dat$depdymin = rowMins(cbind(dat$depdy1, dat$depdy2))
-dat$depdy100_1 = dat$trade_100/dat$gdp1 #depdy1 is 1's dependence on 2 (exports/gdpcap)
-dat$depdy100_2 = dat$trade_100/dat$gdp2  # higher values indicate that 2 is more dependent on trade
-dat$depdymin_100 = rowMins(cbind(dat$depdy100_1, dat$depdy100_2))
-dat$depdymax_100 = rowMaxs(cbind(dat$depdy100_1, dat$depdy100_2))
+
+dat$depdymil1 = dat$trademil/dat$gdp1 #depdy1 is 1's dependence on 2 (exports/gdpcap)
+dat$depdymil2 = dat$trademil/dat$gdp2  # higher values indicate that 2 is more dependent on trade
+dat$depdyminmil = rowMins(cbind(dat$depdymil1, dat$depdymil2))
+dat$depdymaxmil = rowMaxs(cbind(dat$depdymil1, dat$depdymil2))
+
 dat$ln_depdy1 = ifelse(dat$depdy1 == 0, 0, log(dat$depdy1))
 dat$ln_depdy2 = ifelse(dat$depdy2 == 0, 0, log(dat$depdy2))
 dat$ln_depdymax = ifelse(dat$depdymax == 0, 0, log(dat$depdymax))
 dat$ln_depdymin = ifelse(dat$depdymin == 0, 0, log(dat$depdymin))
-dat$ln_depdy100_1 = ifelse(dat$depdy100_1 == 0, 0, log(dat$depdy100_1))
-dat$ln_depdy100_2 = ifelse(dat$depdy100_2 == 0, 0, log(dat$depdy100_2))
-dat$ln_depdymin_100 = ifelse(dat$depdymin_100 == 0, 0, log(dat$depdymin_100))
-dat$ln_depdymax_100 = ifelse(dat$depdymax_100 == 0, 0, log(dat$depdymax_100))
-dat$a1 <- dat$ln_trade_100 - dat$ln_gdp1
-dat$a2 <- dat$ln_trade_100 - dat$ln_gdp2
-dat$amin <- rowMins(cbind(dat$a1, dat$a2))
-dat$amax <- rowMaxs(cbind(dat$a1, dat$a2))
+
+dat$ln_depdymil1 = ifelse(dat$depdymil1 == 0, 0, log(dat$depdymil1))
+dat$ln_depdymil2 = ifelse(dat$depdymil2 == 0, 0, log(dat$depdymil2))
+dat$ln_depdyminmil = ifelse(dat$depdyminmil == 0, 0, log(dat$depdyminmil))
+dat$ln_depdymaxmil = ifelse(dat$depdymaxmil == 0, 0, log(dat$depdymaxmil))
+
+# dat$a1 <- dat$ln_trade_100 - dat$ln_gdp1
+# dat$a2 <- dat$ln_trade_100 - dat$ln_gdp2
+# dat$amin <- rowMins(cbind(dat$a1, dat$a2))
+# dat$amax <- rowMaxs(cbind(dat$a1, dat$a2))
 
 # The log of a quotient is the difference of the logs.
 # 
 # loga (x/y) = loga x - loga y
 
-summary(dat$ln_trade_100 - dat$ln_gdp1)
-summary(log(dat$ln_trade_100/dat$ln_gdp1))
+# summary(dat$ln_trade_100 - dat$ln_gdp1)
+# summary(log(dat$ln_trade_100/dat$ln_gdp1))
 
 # Dyadic GDP variables
 dat$gdpt = dat$gdp1 + dat$gdp2
