@@ -6,7 +6,72 @@ library(stringr)
 library(tibble)
 library(DescTools)
 
-if(!exists("dat")) datlag <- load("./data/TradeInputs.RDS")
+if(!exists("dat")) dat <- load("./data/TradeOut.Rdata")
+
+# dat$tsim <- tsim
+# dat$msim <- msim
+# dat$rsim <- rsim
+# dat$asim <- asim
+
+# dat$terugt <- dat$tsim - dat$ln_trade_100
+# dat$marugt <- dat$msim - dat$ln_trade_100
+# dat$rivugt <- dat$rsim - dat$ln_trade_100
+# dat$anyugt <- dat$asim - dat$ln_trade_100
+# dat$terugtdep1 <- exp(dat$terugt) / dat$gdp1
+# dat$terugtdep1 <- ifelse(dat$terugtdep1 == 0, 0, log(dat$terugtdep1))
+# dat$terugtdep2 <- dat$terugt / dat$ln_gdp2
+# dat$terugtdepmax <- rowMaxs(cbind(dat$terugtdep1, dat$terugtdep2))
+# dat$rivugtdep1 <- dat$rivugt / dat$ln_gdp1
+# dat$rivugtdep2 <- dat$rivugt / dat$ln_gdp2
+# dat$rivugtdepmax <- rowMaxs(cbind(dat$rivugtdep1, dat$rivugtdep2))
+# dat$marugtdep1 <- dat$marugt/ dat$ln_gdp1
+# dat$marugtdep2 <- dat$marugt / dat$ln_gdp2
+# dat$marugtdepmax <- rowMaxs(cbind(dat$marugtdep1, dat$marugtdep2))
+# dat$anyugtdep1 <- dat$anyugt/ dat$ln_gdp1
+# dat$anyugtdep2 <- dat$anyugt / dat$ln_gdp2
+# dat$anyugtdepmax <- rowMaxs(cbind(dat$anyugtdep1, dat$anyugtdep2))
+# dat$anyugtdep100_1 <- exp(dat$anyugt) / dat$gdp1
+# dat$anyugtdep100_1 <- ifelse(dat$anyugtdep1 == 0, 0, log(dat$anyugtdep1))
+# dat$anyugtdep100_2 <- exp(dat$anyugt) / dat$gdp2
+# dat$anyugtdep100_2 <- ifelse(dat$anyugtdep2 == 0, 0, log(dat$anyugtdep2))
+
+
+# dat <- dat %>% arrange(dyad, year) %>% mutate(
+  # lterugt = lag(terugt),
+  # lterugtdep1 = lag(terugtdep1),
+  # lterugtdep2 = lag(terugtdep2),
+  # lterugtdepmax = lag(terugtdepmax),
+  # lrivugt = lag(rivugt),
+  # lrivugtdep1 = lag(rivugtdep1),
+  # lrivugtdep2 = lag(rivugtdep2),
+  # lrivugtdepmax = lag(rivugtdepmax),
+  # lmarugt = lag(marugt),
+  # lmarugtdep1 = lag(marugtdep1),
+  # lmarugtdep2 = lag(marugtdep2),
+  # lmarugtdepmax = lag(marugtdepmax), 
+#   lanyugt = lag(anyugt),
+#   lanyugtdep1 = lag(anyugtdep1),
+#   lanyugtdep2 = lag(anyugtdep2),
+#   lanyugtdepmax = lag(anyugtdepmax)
+# )
+
+# ##### Predicted trade values
+#   dat$terugt <- dat$tsim - dat$ln_trade
+#   dat$marugt <- dat$msim - dat$ln_trade
+#   dat$rivugt <- dat$rsim - dat$ln_trade
+#   
+#   # sum(!is.na(dat[dat$ldyterrclaim == 1, "ugt"]))
+#   # sum(!is.na(icow_cyr_part_out[icow_cyr_part_out$ldyterrclaim == 1, "ugt"]))
+#   
+#   dat$terugtdep1 <- dat$terugt / dat$ln_gdp1
+#   dat$terugtdep2 <- dat$terugt / dat$ln_gdp2
+#   dat$terugtdepmax <- rowMaxs(cbind(dat$terugtdep1, dat$terugtdep2))
+#   dat$rivugtdep1 <- dat$terugt / dat$ln_gdp1
+#   dat$rivugtdep2 <- dat$terugt / dat$ln_gdp2
+#   dat$rivugtdepmax <- rowMaxs(cbind(dat$rivugtdep1, dat$rivugtdep2))
+#   dat$marugtdep1 <- dat$terugt / dat$ln_gdp1
+#   dat$marugtdep2 <- dat$terugt / dat$ln_gdp2
+#   dat$marugtdepmax <- rowMaxs(cbind(dat$marugtdep1, dat$marugtdep2))
 
 ##### ICOW settlement data
 icow_set <- read_dta("./data/ICOWsettle.dta")
