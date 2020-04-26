@@ -130,20 +130,6 @@ dmon <- dmon %>% arrange(ccode, year) %>% mutate(
     dy2 = year * year / 1000
 )
 
-### Predict total monadic trade using monadic variables
-# monmod <- lmer(ln_agg ~ lbterrclaim + lag_ln_gdp + lag_ln_gdpcap + lbmidcyr + lcinc +
-#                  lpol + year + dy2,
-#                data = dmon); summary(monmod)#;r.squaredGLMM(monmod) #  .662/.93
-# bmonsim <- dmon
-# monsim$lnterrclaim <- 0
-# dmon$monsim <- predict(monmod, monsim, allow.new.levels = T)
-# dmon$ugdep1  <- dmon$ugt/dmon$gdp1 * 1000000
-# dmon$ugdep2 <- dmon$ugt/dmon$gdp2 * 1000000
-# dmon$ugdept <- dmon$ugt/dmon$gdpt * 1000000
-# dmon$ugtdivtr1 <- dmon$ugt/dmon$sflow2
-# dmon$ugtdivtr2 <- dmon$ugt/dmon$sflow1
-
-
 # Create separate versions of monadic data
 dmon1 = dmon %>% select(-"version") %>% setNames(paste0(names(.), "1")) %>% rename(year = year1)
 dmon2 = dmon %>% select(-"version") %>% setNames(paste0(names(.), "2")) %>% rename(year = year2)
