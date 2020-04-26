@@ -154,54 +154,65 @@ dat <- ungroup(dat %>% group_by(dyad) %>% mutate(
   mln_trademil = mean(ln_trademil, na.rm = T)
 ))
 dat$aggtrademin = rowMins(cbind(dat$aggtrade1, dat$aggtrade2))
+dat$aggtradenax = rowMaxs(cbind(dat$aggtrade1, dat$aggtrade2))
 
 # Deviations from mean dyadic trade
 dat$trdev = dat$trade - dat$mtrade
-dat$ln_trdev = dat$ln_trade - dat$mlntrade
+dat$ln_trdev = dat$ln_trade - dat$mln_trade
+
 dat$trdevmil = dat$trademil - dat$mtrademil
 dat$ln_trdevmil = dat$ln_trademil - dat$mln_trademil
 
-# Dependence on global trade
-dat$deptot1 = (dat$exports1 + dat$imports1) / (dat$gdp1)
-dat$deptot2 = (dat$exports2 + dat$imports2) /(dat$gdp2)
-dat$deptot100_1 = (dat$agg_1001) / (dat$gdp1)
-dat$deptot100_2 = (dat$agg_1002) /(dat$gdp2)
+# Monadic dependence on global trade
+dat$deptot1 = dat$aggtrade1 / dat$gdp1
+dat$deptot2 = dat$aggtrade2 / dat$gdp2
 dat$deptotmin = rowMins(cbind(dat$deptot1, dat$deptot2))
 dat$deptotmax = rowMaxs(cbind(dat$deptot1, dat$deptot2))
-dat$deptotmin_100 = rowMins(cbind(dat$deptot100_1, dat$deptot100_2))
-dat$deptotmax_100 = rowMaxs(cbind(dat$deptot100_1, dat$deptot100_2))
-dat$depoth1 = (dat$exports1 + dat$imports1 - dat$trade) / (dat$gdp1)
-dat$depoth2 = (dat$exports2 + dat$imports2 - dat$trade) /(dat$gdp2)
-dat$depoth100_1 = (dat$agg_1001 - dat$trade_100) / (dat$gdp1)
-dat$depoth100_2 = (dat$agg_1002 - dat$trade_100) /(dat$gdp2)
-dat$depothmin = rowMins(cbind(dat$depoth1, dat$depoth2))
-dat$depothmax = rowMaxs(cbind(dat$depoth1, dat$depoth2))
-dat$depothmin_100 = rowMins(cbind(dat$depoth100_1, dat$depoth100_2))
-dat$depothmax_100 = rowMaxs(cbind(dat$depoth100_1, dat$depoth100_2))
+
+dat$deptotmil1 = dat$aggtrademil1 / dat$gdp1
+dat$deptotmil2 = dat$aggtrademil2 /dat$gdp2
+dat$deptotmilmin = rowMins(cbind(dat$deptotmil1, dat$deptotmil1))
+dat$deptotmilmax = rowMaxs(cbind(dat$deptotmil1, dat$deptotmil2))
+
 dat$ln_deptot1 = ifelse(dat$deptot1 == 0, 0, log(dat$deptot1))
 dat$ln_deptot2 = ifelse(dat$deptot2 == 0, 0, log(dat$deptot2))
 dat$ln_deptotmin = ifelse(dat$deptotmin == 0, 0, log(dat$deptotmin))
 dat$ln_deptotmax = ifelse(dat$deptotmax == 0, 0, log(dat$deptotmax))
-dat$ln_deptot100_1 = ifelse(dat$deptot100_1 == 0, 0, log(dat$deptot100_1))
-dat$ln_deptot100_2 = ifelse(dat$deptot100_2 == 0, 0, log(dat$deptot100_2))
-dat$ln_depothmin = ifelse(dat$depothmin == 0, 0, log(dat$depothmin))
-dat$ln_deptotmin_100 = ifelse(dat$deptotmin_100 == 0, 0, log(dat$deptotmin_100))
-dat$ln_deptotmax_100 = ifelse(dat$deptotmax_100 == 0, 0, log(dat$deptotmax_100))
+
+dat$ln_deptotmil1 = ifelse(dat$deptotmil1 == 0, 0, log(dat$deptotmil1))
+dat$ln_deptotmil2 = ifelse(dat$deptotmil2 == 0, 0, log(dat$deptotmil2))
+dat$ln_deptotmilmin = ifelse(dat$deptotmilmin == 0, 0, log(dat$deptotmilmin))
+dat$ln_deptotmilmax = ifelse(dat$deptotmilmax == 0, 0, log(dat$deptotmilmax))
+
+# Monadic dependence on trade with other countries besides other dyad member
+dat$depoth1 = dat$aggtrade1 - dat$trade / dat$gdp1
+dat$depoth2 = dat$aggtrade2 / dat$gdp2
+dat$depothmin = rowMins(cbind(dat$depoth1, dat$depoth2))
+dat$depothmax = rowMaxs(cbind(dat$depoth1, dat$depoth2))
+
+dat$depothmil1 = dat$aggtrademil1 - dat$trademil / dat$gdp1
+dat$depothmil2 = dat$aggtrademil2 - dat$trademil / dat$gdp2
+dat$depothminmil = rowMins(cbind(dat$depothmil1, dat$depothmil2))
+dat$depothmaxmil = rowMaxs(cbind(dat$depothmil1, dat$depothmil2))
+
 dat$ln_depoth1 = ifelse(dat$depoth1 == 0, 0, log(dat$depoth1))
 dat$ln_depoth2 = ifelse(dat$depoth2 == 0, 0, log(dat$depoth2))
+dat$ln_depothmin = ifelse(dat$depothmin == 0, 0, log(dat$depothmin))
 dat$ln_depothmax = ifelse(dat$depothmax == 0, 0, log(dat$depothmax))
-dat$ln_depoth100_1 = ifelse(dat$depoth100_1 == 0, 0, log(dat$depoth100_1))
-dat$ln_depoth100_2 = ifelse(dat$depoth100_2 == 0, 0, log(dat$depoth100_2))
-dat$ln_depothmin_100 = ifelse(dat$depothmin_100 == 0, 0, log(dat$depothmin_100))
-dat$ln_depothmax_100 = ifelse(dat$depothmax_100 == 0, 0, log(dat$depothmax_100))
-dat$b1 = dat$ln_agg1 / dat$ln_gdp1
-dat$b2 = dat$ln_agg2 / dat$ln_gdp2
-dat$bmin = rowMins(cbind(dat$b1, dat$b2))
-dat$bmax = rowMaxs(cbind(dat$b1, dat$b2))
-dat$c1 = (dat$ln_agg1 - dat$ln_trade)/ dat$ln_gdp1
-dat$c2 = (dat$ln_agg2 - dat$ln_trade)/ dat$ln_gdp2
-dat$cmin = rowMins(cbind(dat$c1, dat$c2))
-dat$cmax = rowMaxs(cbind(dat$c1, dat$c2))
+
+dat$ln_depothmil1 = ifelse(dat$depothmil1 == 0, 0, log(dat$depothmil1))
+dat$ln_depothmil2 = ifelse(dat$depothmil2 == 0, 0, log(dat$depothmil2))
+dat$ln_depothmilmin = ifelse(dat$depothmil1 == 0, 0, log(dat$depothmil2))
+dat$ln_depothmilmax = ifelse(dat$depothmil1 == 0, 0, log(dat$depothmil2))
+
+# dat$b1 = dat$ln_agg1 / dat$ln_gdp1
+# dat$b2 = dat$ln_agg2 / dat$ln_gdp2
+# dat$bmin = rowMins(cbind(dat$b1, dat$b2))
+# dat$bmax = rowMaxs(cbind(dat$b1, dat$b2))
+# dat$c1 = (dat$ln_agg1 - dat$ln_trade)/ dat$ln_gdp1
+# dat$c2 = (dat$ln_agg2 - dat$ln_trade)/ dat$ln_gdp2
+# dat$cmin = rowMins(cbind(dat$c1, dat$c2))
+# dat$cmax = rowMaxs(cbind(dat$c1, dat$c2))
 
 # Dependence on dyadic trade
 dat$depdy1 = dat$trade/dat$gdp1 #depdy1 is 1's dependence on 2 (exports/gdpcap)
