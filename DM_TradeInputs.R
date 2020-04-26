@@ -11,7 +11,6 @@ library(MuMIn)
 library(optimx)
 library(DescTools)
 
-igo <- read_dta("./data/igocount.dta")
 
 ### Import Monadic Data
 madd = read_csv("./data/madd.csv")
@@ -136,18 +135,13 @@ dmon2 = dmon %>% select(-"version") %>% setNames(paste0(names(.), "2")) %>% rena
 
 ########### DYADIC DATA ##########
 
+### Import igo data
+igo <- read_dta("./data/igocount.dta")
+
 ### Distance and contiguity data
 ddist  <- read_csv("./data/COW_Distance_NewGene_Export.csv")
-# ddist$dyad <- undirdyads(ddist, ccode1, ccode2)
 dcont  <- read_csv("./data/COW_Contiguity_NewGeneExport.csv")
-# dcont$dyad <- undirdyads(dcont, ccode1, ccode2)
 dcont <- dcont[dcont$ccode1 < dcont$ccode2, ]
-# dcont$dup <- duplicated(dcont[, c("dyad", "year")])
-# dsub <- dcont[dcont$dup == 1, ]
-# duplicated(dcont[, c("dyad", "year")])
-# dsub <- dcont[order("dyad", "year"), ]
-# dsub <- arrange(dcont, dyad, year)
-
 
 ### Alliance data
 dally <- read_csv("./data/alliance_v4.1_by_dyad_yearly.csv")
