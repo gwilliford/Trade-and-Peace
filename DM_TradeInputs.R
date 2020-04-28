@@ -11,6 +11,7 @@ library(MuMIn)
 library(optimx)
 library(DescTools)
 
+### Does igo need to be recoded as missing?
 
 ### Import Monadic Data
 madd = read_csv("./data/madd.csv")
@@ -112,6 +113,7 @@ dally <- dally %>%
     defense = sum(defense, na.rm = T)
   ) %>% 
   select(dyad, year, defense)#neutrality, nonaggression, entente
+igo <- read_dta("./data/igocount.dta")
 
 ### Gibler MID data
 dmid <- read_csv("./data/gml-ndy-disputes-2.0.csv")
@@ -298,6 +300,11 @@ dat$ln_gdpcapmin = rowMins(cbind(dat$ln_gdpcap1, dat$ln_gdpcap2))
 dat$ln_gdpcapmax = rowMaxs(cbind(dat$ln_gdpcap1, dat$ln_gdpcap2))
 dat$ln_gdpcapt = log(dat$gdpcapt)
 
+# Log of trade dependence
+dat$dee <- dat$ln_trade - dat$ln_gdpmin
+dat$mac <- dat$ln_trade - dat$ln_gdpmax
+dat$frank <- dat$dee / dat$mac # ratio of trade dependence lesser/greater
+
 # percent change gdp dyadic
 # dat$pch_gdpmin = rowMins(cbind(dat$pch_gdp1, dat$pch_gdp2))
 
@@ -410,7 +417,11 @@ datlag <- dat %>% arrange(dyad, year) %>% mutate(
   
   lgovcrises1 = lag(GovCrises1),
   lgovcrises2 = lag(GovCrises2),
-  lgovcrisesDy = lag(govcrisesdy)
+  lgovcrisesDy = lag(govcrisesdy),
+  
+  lagdee = lag(dee),
+  lagmac = lag(mac),
+  lagfrank = lag(frank)
 )
 
 write_rds(dat, "./data/TradeInputs.RDS")
