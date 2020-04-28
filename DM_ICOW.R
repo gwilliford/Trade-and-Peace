@@ -13,15 +13,7 @@ icow_set <- read_dta("./data/ICOWsettle.dta") %>%
   # filter(midiss == 0) %>% 
   select(-mid)
 
-# Create agreement dummies
-# icow_set$icowmid <- ifelse(is.na(icow_set$midiss), 0, icow_set$midiss)
-icow_set$agree <- ifelse(is.na(icow_set$agree), 0, icow_set$agree)
-icow_set$agreeiss <- ifelse(is.na(icow_set$agreeiss), 0, icow_set$agreeiss)
-icow_set$ag_end_any  <- ifelse(icow_set$agreeiss == 1 & (icow_set$claimend == 1:2), 1, 0)
-icow_set$ag_end_part <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 1, 1, 0)
-icow_set$ag_end_full <- ifelse(icow_set$agreeiss == 1 & icow_set$claimend == 2, 1, 0)
-
-#Collapse icow settlement data to dyad year format
+# Collapse icow settlement data to dyad year format
 icow_set_cldy <- icow_set %>%
   group_by(claimdy, year) %>%
   summarize(
@@ -44,15 +36,13 @@ icow_set_cldy <- icow_set %>%
 # icow_claimdy$respset = ifelse(icow_claimdy$resolved %in% c(4, 12, 13, 14), 1, 0)
 # icow_claimdy$resother = ifelse(icow_claimdy$resolved %in% c(5, 6, 11), 1, 0) # independence, actor leaves system, disp territory no longer exists
 
-##### ICOW Partial Claim-Year Data
+##### Add settlement variables to ICOW Partial Claim-Year Data
 icow_part_cyr <- read_dta("./data/ICOWdyadyr.dta") %>%
   filter(chal != 2220 & tgt != 2200)
 
 # Merge settlement attempt variables into claim-year data
 icow_part_cyr <- left_join(icow_part_cyr, icow_set_cldy)
 icow_part_cyr$one <- 1
-icow_part_cyr$agree <- ifelse(icow_part_cyr$sagree > 0, 1, 0)
-icow_part_cyr$agree <- ifelse(is.na(icow_part_cyr$agree), 0, icow_part_cyr$agree)
 icow_part_cyr$agree <- ifelse(icow_part_cyr$sagree > 0, 1, 0)
 icow_part_cyr$agree <- ifelse(is.na(icow_part_cyr$agree), 0, icow_part_cyr$agree)
 icow_part_cyr$agreeiss <- ifelse(icow_part_cyr$sagreeiss > 0, 1, 0)
@@ -64,20 +54,21 @@ icow_part_cyr <- icow_part_cyr %>%
   arrange(claimdy, year) %>%
   group_by(claimdy) %>%
   mutate(
-    cltermyr = max(year),
-    clterm = if_else(cltermyr == year, 1, 0),
-    clstop = cumsum(one),
-    clstart = clstop - 1,
+    cltermyr  = max(year),
+    clterm    = if_else(cltermyr == year, 1, 0),
+    clstop    = cumsum(one),
+    clstart   = clstop - 1,
     
-    cumagr = cumsum(agree),
+    # Spell variables for cumagr, cumagriss, cummid
+    cumagr    = cumsum(agree),
     cumagriss = cumsum(agreeiss),
-    cummid = cumsum(midissyr),
+    cummid    = cumsum(midissyr),
     
-    cumagr = if_else(agree == 1, cumagr - 1, cumagr),
+    cumagr    = if_else(agree == 1, cumagr - 1, cumagr),
     cumagriss = if_else(agreeiss == 1, cumagriss - 1, cumagriss),
-    cummid = if_else(midissyr == 1, cummid - 1, cummid),
+    cummid    = if_else(midissyr == 1, cummid - 1, cummid),
     
-    lastmid = LOCF(midyear)
+    lastmid   = LOCF(midyear)
   ) %>% 
   ungroup(icow_part_cyr)
 
@@ -120,28 +111,33 @@ icow_part_cyr <- left_join(icow_part_cyr, datlag)
                        "agreeiss", "cumagriss", "agiss_start", "agiss_stop", "agisstermyr", "agissterm")])
 # View(select(icow_part_cyr, claimdy, cumagr, year, clstart, clstop, clterm, agreeiss, clagrspell)) %>% filter(claimdy == 7801)
 
-icow_part_cyr$charlie <- ifelse(icow_part_cyr$depdymin_100 == 0, 0, log(icow_part_cyr$depdymin_100))
-icow_part_cyr$mac <- icow_part_cyr$ln_trade_100 - icow_part_cyr$ln_gdp_min
-icow_part_cyr$dennis <- icow_part_cyr$gdp_min * 1000000
-icow_part_cyr$cricket <- icow_part_cyr$gdp_max * 1000000
-icow_part_cyr$dee <- icow_part_cyr$ln_trade - log(icow_part_cyr$dennis)
-icow_part_cyr$frank <- icow_part_cyr$ln_trade - log(icow_part_cyr$cricket)
-icow_part_cyr$mcpoyle <- icow_part_cyr$dee / icow_part_cyr$frank
-icow_part_cyr$ponderosa <- icow_part_cyr$dee - icow_part_cyr$frank
-icow_part_cyr$waitress <- (icow_part_cyr$trade - icow_part_cyr$dennis) / (icow_part_cyr$trade - icow_part_cyr$cricket)
-icow_part_cyr$fattymagoo <- log(icow_part_cyr$waitress)
+# icow_part_cyr$charlie <- ifelse(icow_part_cyr$depdymin_100 == 0, 0, log(icow_part_cyr$depdymin_100))
+# icow_part_cyr$mac <- icow_part_cyr$ln_trade_100 - icow_part_cyr$ln_gdp_min
+# icow_part_cyr$dennis <- icow_part_cyr$gdp_min * 1000000
+# icow_part_cyr$cricket <- icow_part_cyr$gdp_max * 1000000
+# icow_part_cyr$dee <- icow_part_cyr$ln_trade - log(icow_part_cyr$dennis)
+# icow_part_cyr$frank <- icow_part_cyr$ln_trade - log(icow_part_cyr$cricket)
+# icow_part_cyr$mcpoyle <- icow_part_cyr$dee / icow_part_cyr$frank
+# icow_part_cyr$ponderosa <- icow_part_cyr$dee - icow_part_cyr$frank
+# icow_part_cyr$waitress <- (icow_part_cyr$trade - icow_part_cyr$dennis) / (icow_part_cyr$trade - icow_part_cyr$cricket)
+# icow_part_cyr$fattymagoo <- log(icow_part_cyr$waitress)
 
-icow_part_cyr = icow_part_cyr %>% mutate(
-  pikachu = trade_100/(gdp1) * 100,
-  squirtle = trade_100/(gdp2) * 100,
-  bulbasaur = pikachu * squirtle, 
-  charmander = rowMins(cbind(pikachu, squirtle)),
-  psyduck = rowMaxs(cbind(pikachu, squirtle)), 
-  staryu = if_else(ccode1 == chal, pikachu, squirtle),
-  starmie = if_else(ccode1 == tgt, pikachu, squirtle)
-)
-icow_part_cyr$pikachu2 <- ifelse(icow_part_cyr$pikachu > 1, 1, icow_part_cyr$pikachu)
-summary(icow_part_cyr$bulbasaur) * 100
+# icow_part_cyr = icow_part_cyr %>% mutate(
+#   pikachu = trade_100/(gdp1) * 100,
+#   squirtle = trade_100/(gdp2) * 100,
+#   bulbasaur = pikachu * squirtle, 
+#   charmander = rowMins(cbind(pikachu, squirtle)),
+#   psyduck = rowMaxs(cbind(pikachu, squirtle)), 
+#   staryu = if_else(ccode1 == chal, pikachu, squirtle),
+#   starmie = if_else(ccode1 == tgt, pikachu, squirtle)
+# )
+# icow_part_cyr$pikachu2 <- ifelse(icow_part_cyr$pikachu > 1, 1, icow_part_cyr$pikachu)
+# summary(icow_part_cyr$bulbasaur) * 100
+
+icow_part_cyr$tdepmin <- icow_part_cyr$dee
+icow_part_cyr$tdepmax <- icow_part_cyr$frank
+icow_part_cyr$tdepavg <- (icow_part_cyr$tdepmin + icow_part_cyr$tdepmax) / 2
+icow_part_cyr$tdepdif <- icow_part_cyr$tdepmax - icow_part_cyr$tdepmin
 
 icow_part_cyr$lncaprat <- log(icow_part_cyr$lcaprat)
 icow_part_cyr$igosum <- ifelse(is.na(icow_part_cyr$igosum), 0, icow_part_cyr$igosum)
@@ -375,7 +371,3 @@ icow_part_cyr$c3 <- icow_part_cyr$clstop^3 / 10000
 #       stata.version = 13)  # again, specify what _you_ have
 # options("RStata.StataPath" = "/Applications/Stata/StataMP.app/Contents/MacOS/stata-mp")
 # options("RStata.StataVersion" = 13)
-icow_part_cyr$tdepmin <- icow_part_cyr$dee
-icow_part_cyr$tdepmax <- icow_part_cyr$frank
-icow_part_cyr$tdepavg <- (icow_part_cyr$tdepmin + icow_part_cyr$tdepmax) / 2
-icow_part_cyr$tdepdif <- icow_part_cyr$tdepmax - icow_part_cyr$tdepmin
