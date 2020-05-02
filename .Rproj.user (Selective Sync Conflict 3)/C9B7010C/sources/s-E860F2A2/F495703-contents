@@ -1,0 +1,311 @@
+setwd("C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis")
+library(tvcure)
+options(scipen = 999)
+if(!exists("icow_part_cyr")) icow_part_cyr <- readRDS("./data/ICOWFinal.RDS")
+
+# a <- read_dta("./data/ICOWdyadyr.dta")
+# a <- filter(a, year < 1870, )
+
+
+# varlist = list("Capability Change" = "capchange",
+#                "Foreign Imposed Regime Change" = "archigosFIRC",
+#                "Deaths" = "lndeaths",
+#                "index")
+##### attempt models---------------------------------------------
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+atgap1 <- tvcure(Surv(at_start, at_stop, at_term) ~ lagdee +
+               icowsal + riveriss + mariss +
+               recmidwt + recfatwt + recnowt + recyeswt,
+             #lag_pch_gdp_min,
+             cureform =  ~ lagdee +
+               icowsal + riveriss + mariss +
+               demdy + autdy +
+               lcaprat + ldefense + contdir + igosum, 
+             data = icow_part_cyr, 
+             var = T, nboot = 1000, brglm = T); summary(atgap1)
+stopCluster(cl)
+
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+atgap2 <- tvcure(Surv(at_start, at_stop, at_term) ~ lagmac +
+                icowsal + riveriss + mariss +
+                recmidwt + recfatwt + recnowt + recyeswt,
+              #lag_pch_gdp_min,
+              cureform =  ~ lagmac +
+                icowsal + riveriss + mariss +
+                demdy + autdy +
+                lcaprat + ldefense + contdir + igosum, 
+              data = icow_part_cyr, 
+              var = T, nboot = 1000, brglm = T, parallel = T); summary(atgap2)
+stopCluster(cl)
+
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+atgap3 <- tvcure(Surv(at_start, at_stop, at_term) ~ lagfrank +
+                icowsal + riveriss + mariss +
+                recmidwt + recfatwt + recnowt + recyeswt,
+              #lag_pch_gdp_min,
+              cureform =  ~ lagfrank +
+                icowsal + riveriss + mariss +
+                demdy + autdy +
+                lcaprat + ldefense + contdir + igosum, 
+              data = icow_part_cyr, 
+              var = T, nboot = 1000, brglm = T); summary(atgap3)
+stopCluster(cl)
+
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+atgap4 <- tvcure(Surv(at_start, at_stop, at_term) ~ lagfattymagoo +
+                icowsal + riveriss + mariss +
+                recmidwt + recfatwt + recnowt + recyeswt,
+              #lag_pch_gdp_min,
+              cureform =  ~ lagfattymagoo +
+                icowsal + riveriss + mariss +
+                demdy + autdy +
+                lcaprat + ldefense + contdir + igosum, 
+              data = icow_part_cyr, 
+              var = T, nboot = 1000, brglm = T); summary(atgap4)
+stopCluster(cl)
+save(atgap1, atgap2, atgap3, atgap4, file = "./models/atgap.Rdata")
+rm(atgap1, atgap2, atgap3, atgap4)
+
+##### agreement models-------------------------------------------
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+aggap1 <- tvcure(Surv(agstart, agstop, agterm) ~ lagdee +
+               icowsal + riveriss + mariss +
+               recmidwt + recfatwt + recnowt + recyeswt,
+               #lag_pch_gdp_min,
+             cureform =  ~ lagdee +
+               icowsal + riveriss + mariss +
+               demdy + autdy +
+               lcaprat + ldefense + contdir + igosum, 
+             data = icow_part_cyr, 
+             var = T, nboot = 1000, brglm = T); summary(agapp1)
+stopCluster(cl)
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+aggap2 <- tvcure(Surv(agstart, agstop, agterm) ~ lagmac +
+               icowsal + riveriss + mariss +
+               recmidwt + recfatwt + recnowt + recyeswt,
+             #lag_pch_gdp_min,
+             cureform =  ~ lagmac +
+               icowsal + riveriss + mariss +
+               demdy + autdy +
+               lcaprat + ldefense + contdir + igosum, 
+             data = icow_part_cyr, 
+             var = T, nboot = 1000, brglm = T); summary(aggap2)
+stopCluster(cl)
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+aggap3 <- tvcure(Surv(agstart, agstop, agterm) ~ lagfrank +
+                icowsal + riveriss + mariss +
+                recmidwt + recfatwt + recnowt + recyeswt,
+              #lag_pch_gdp_min,
+              cureform =  ~ lagfrank +
+                icowsal + riveriss + mariss +
+                demdy + autdy +
+                lcaprat + ldefense + contdir + igosum, 
+              data = icow_part_cyr, 
+              var = T, nboot = 1000, brglm = T); summary(aggap3)
+stopCluster(cl)
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+aggap4 <- tvcure(Surv(agstart, agstop, agterm) ~ lagfattymagoo +
+                icowsal + riveriss + mariss +
+                recmidwt + recfatwt + recnowt + recyeswt,
+              #lag_pch_gdp_min,
+              cureform =  ~ lagfattymagoo +
+                icowsal + riveriss + mariss +
+                demdy + autdy +
+                lcaprat + ldefense + contdir + igosum, 
+              data = icow_part_cyr, 
+              var = T, nboot = 1000, brglm = T); summary(aggap4)
+save(aggap1, aggap2, aggap3, aggap4, file = "./models/aggap.Rdata")
+rm(aggap1, aggap2, aggap3, aggap4)
+# - lagdee, lagmac, lagfrank, and lagfattymagoo look promising
+
+##### substantive agreement models -----------------------------------------------------
+stopCluster(cl)
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+
+agissgap1 <- tvcure(Surv(agiss_start, agiss_stop, agissterm) ~ lagdee + 
+                  recmidwt + recfatwt + recnowt + recyeswt,
+                  #lag_pch_gdp_min,
+                cureform =  ~ lagdee +
+                  icowsal + riveriss + mariss +
+                  demdy + autdy +
+                  lcaprat + ldefense + contdir + igosum, 
+                data = icow_part_cyr, 
+                var = T, nboot = 1000, brglm = T); summary(agissgap1)
+stopCluster(cl)
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+
+agissgap2 <- tvcure(Surv(agiss_start, agiss_stop, agissterm) ~ lagmac + 
+                  recmidwt + recfatwt + recnowt + recyeswt,
+                #lag_pch_gdp_min,
+                cureform =  ~ lagmac +
+                  icowsal + riveriss + mariss +
+                  demdy + autdy +
+                  lcaprat + ldefense + contdir + igosum, 
+                data = icow_part_cyr, 
+                var = T, nboot = 1000, brglm = T); summary(agissgap2)
+stopCluster(cl)
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+
+agissgap3 <- tvcure(Surv(agiss_start, agiss_stop, agissterm) ~ lagfrank + 
+                  recmidwt + recfatwt + recnowt + recyeswt,
+                #lag_pch_gdp_min,
+                cureform =  ~ lagfrank +
+                  icowsal + riveriss + mariss +
+                  demdy + autdy +
+                  lcaprat + ldefense + contdir + igosum, 
+                data = icow_part_cyr, 
+                var = T, nboot = 1000, brglm = T); summary(agissgap3)
+stopCluster(cl)
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+
+agissgap4 <- tvcure(Surv(agiss_start, agiss_stop, agissterm) ~ lagfattymagoo + 
+                   recmidwt + recfatwt + recnowt + recyeswt,
+                 #lag_pch_gdp_min,
+                 cureform =  ~ lagfattymagoo +
+                   icowsal + riveriss + mariss +
+                   demdy + autdy +
+                   lcaprat + ldefense + contdir + igosum, 
+                 data = icow_part_cyr, 
+                 var = T, nboot = 1000, brglm = T); summary(agissgap4)
+stopCluster(cl)
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+save(agissgap1, agissgap2, agissgap3, agissgap4, file = "./models/agissgap.Rdata")
+rm(agissgap1, agissgap2, agissgap3, agissgap4)
+### Above looks good
+
+##### Claim termination models ----------------------------------------------------------------
+
+cltermgap1 <- tvcure(Surv(clstart, clstop, clterm) ~ lagdee + 
+                  recmidwt + recfatwt + recnowt + recyeswt,
+                #lag_pch_gdp_min,
+                cureform =  ~ lagdee +
+                  icowsal + riveriss + mariss +
+                  demdy + autdy +
+                  lcaprat + ldefense + contdir + igosum, 
+                data = icow_part_cyr, 
+                var = T, nboot = 1000, brglm = T); summary(cltermgap1)
+stopCluster(cl)
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+
+
+cltermgap2 <- tvcure(Surv(clstart, clstop, clterm) ~ lagmac + 
+                   recmidwt + recfatwt + recnowt + recyeswt,
+                 #lag_pch_gdp_min,
+                 cureform =  ~ lagmac +
+                   icowsal + riveriss + mariss +
+                   demdy + autdy +
+                   lcaprat + ldefense + contdir + igosum, 
+                 data = icow_part_cyr, 
+                 var = T, nboot = 1000, brglm = T); summary(cltermgap2)
+stopCluster(cl)
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+
+cltermgap3 <- tvcure(Surv(clstart, clstop, clterm) ~ lagfrank + 
+                   recmidwt + recfatwt + recnowt + recyeswt,
+                 #lag_pch_gdp_min,
+                 cureform =  ~ lagfrank +
+                   icowsal + riveriss + mariss +
+                   demdy + autdy +
+                   lcaprat + ldefense + contdir + igosum, 
+                 data = icow_part_cyr, 
+                 var = T, nboot = 1000, brglm = T); summary(cltermgap3)
+stopCluster(cl)
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+
+cltermgap4 <- tvcure(Surv(clstart, clstop, clterm) ~ lagfattymagoo + 
+                    recmidwt + recfatwt + recnowt + recyeswt,
+                  #lag_pch_gdp_min,
+                  cureform =  ~ lagfattymagoo +
+                    icowsal + riveriss + mariss +
+                    demdy + autdy +
+                    lcaprat + ldefense + contdir + igosum, 
+                  data = icow_part_cyr, 
+                  var = T, nboot = 1000, brglm = T); summary(cltermgap4)
+save(cltermgap1, cltermgap2, cltermgap3, cltermgap4, file = "./models/cltermgap.Rdata")
+rm(cltermgap1, cltermgap2, cltermgap3, cltermgap4)
+### Does not look good
+
+##### MID models ------------------------------------------
+stopCluster(cl)
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+
+midtermgap1 <- tvcure(Surv(midstart, midstop, midissyr) ~ lagdee + 
+                   recmidwt + recfatwt + recnowt + recyeswt,
+                 #lag_pch_gdp_min,
+                 cureform =  ~ lagdee +
+                   icowsal + riveriss + mariss +
+                   demdy + autdy +
+                   lcaprat + ldefense + contdir + igosum, 
+                 data = icow_part_cyr, 
+                 var = T, nboot = 1000, brglm = T); summary(midtermgap1)
+stopCluster(cl)
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+
+midtermgap2 <- tvcure(Surv(midstart, midstop, midissyr) ~ lagmac + 
+                    recmidwt + recfatwt + recnowt + recyeswt,
+                  #lag_pch_gdp_min,
+                  cureform =  ~ lagmac +
+                    icowsal + riveriss + mariss +
+                    demdy + autdy +
+                    lcaprat + ldefense + contdir + igosum, 
+                  data = icow_part_cyr, 
+                  var = T, nboot = 1000, brglm = T); summary(midtermgap2)
+stopCluster(cl)
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+
+midtermgap3 <- tvcure(Surv(midstart, midstop, midissyr) ~ lagfrank + 
+                    recmidwt + recfatwt + recnowt + recyeswt,
+                  #lag_pch_gdp_min,
+                  cureform =  ~ lagfrank +
+                    icowsal + riveriss + mariss +
+                    demdy + autdy +
+                    lcaprat + ldefense + contdir + igosum, 
+                  data = icow_part_cyr, 
+                  var = T, nboot = 1000, brglm = T); summary(midtermgap3)
+stopCluster(cl)
+cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
+
+midtermgap4 <- tvcure(Surv(midstart, midstop, midissyr) ~ lagfattymagoo + 
+                    recmidwt + recfatwt + recnowt + recyeswt,
+                  #lag_pch_gdp_min,
+                  cureform =  ~ lagfattymagoo +
+                    icowsal + riveriss + mariss +
+                    demdy + autdy +
+                    lcaprat + ldefense + contdir + igosum, 
+                  data = icow_part_cyr, 
+                  var = T, nboot = 1000, brglm = T); summary(midtermgap4)
+stopCluster(cl)
+save(midtermgap1, midtermgap2, midtermgap3, midtermgap4, file = "./models/midtermgap.Rdata")
+save(midtermgap1, midtermgap2, midtermgap3, midtermgap4)
+# lagfattymagoo works
+
+
+# agiss_pred <- prediction3(agiss, "dee", c(-46, -31), type = "uncureprob", CI = T)
+# plot(agiss_pred)
+# 
+# agiss2 <- tvcure(Surv(clstart, clstop, agreeiss) ~ frank + 
+#                    recmidwt + recfatwt + recnowt + recyeswt +
+#                    lag_pch_gdp_min,
+#                  cureform =  ~ frank +
+#                    icowsal + riveriss + mariss +
+#                    demdy + autdy +
+#                    lcaprat + ldefense + contdir + igosum, 
+#                  data = icow_part_cyr, 
+#                  var = T, nboot = 1000, brglm = T); summary(agiss2)
+# agiss2_pred <- prediction3(agiss2, "frank", c(-44, -29), type = "uncureprob", CI = T)
+# plot(agiss2_pred, xlab = "Probability of Agreement", ylab = "Maximum Economic Interdependence (ln(Trade/GDP))")
+# 
+# b <- read.dta13("./data/icow_final.dta")
+# b <- b %>% rename("agstart1" = "_t0", "agstop2" = "_t", "agfail3" = "_d")
+# ag_fail <- tvcure(Surv(agstart1, agstop2, agfail3) ~ recmidwt + recfatwt + recnowt + recyeswt +
+#                     lag_pch_gdp_min,
+#                   cureform =  ~ dee +
+#                     icowsal + riveriss + mariss +
+#                     demdy + autdy +
+#                     lcaprat + ldefense + contdir + igosum, 
+#                   data = b, 
+#                   var = T, nboot = 1000, brglm = T); summary(ag_fail)
+# ag_fail <- coxph(Surv(agstart1, agstop2, agfail3) ~ dee +
+#                    icowsal + riveriss + mariss +
+#                    recmidwt + recfatwt + recnowt + recyeswt +
+#                    lag_pch_gdp_min, data = b)
