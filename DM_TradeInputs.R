@@ -304,9 +304,32 @@ dat$ln_gdpcapt = log(dat$gdpcapt)
 dat$dee <- dat$ln_trade - dat$ln_gdpmin
 dat$mac <- dat$ln_trade - dat$ln_gdpmax
 dat$frank <- dat$dee / dat$mac # ratio of trade dependence lesser/greater
-
+dat$fattymagoo <- dat$mac - dat$dee
+# dat$charlie <- dat$ln_trademil - dat$ln_gdpmin
 # percent change gdp dyadic
-# dat$pch_gdpmin = rowMins(cbind(dat$pch_gdp1, dat$pch_gdp2))
+dat$pch_gdpmin = rowMins(cbind(dat$pch_gdp1, dat$pch_gdp2))
+dat$pch_gdpmax = rowMaxs(cbind(dat$pch_gdp1, dat$pch_gdp2))
+dat$pch_gdpcapmin = rowMins(cbind(dat$pch_gdpcap1, dat$pch_gdpcap2))
+dat$pch_gdpcapmax = rowMaxs(cbind(dat$pch_gdpcap1, dat$pch_gdpcap2))
+dat$pch_ln_gdpmin = rowMins(cbind(dat$pch_ln_gdp1, dat$pch_ln_gdp2))
+dat$pch_ln_gdpmax = rowMaxs(cbind(dat$pch_ln_gdp1, dat$pch_ln_gdp2))
+dat$pch_ln_gdpcapmin = rowMins(cbind(dat$pch_ln_gdpcap1, dat$pch_ln_gdpcap2))
+dat$pch_ln_gdpcapmax = rowMaxs(cbind(dat$pch_ln_gdpcap1, dat$pch_ln_gdpcap2))
+
+# a <- plot(density(log(icow_part_cyr$trademil)-log(icow_part_cyr$gdpmin), na.rm = T))
+# d$dee2 <- log(d$trademil) - log(d$lgdpmin)
+# d$lagdee2 <- d$lag_ln_trademil - d$lag_ln_gdpmin
+
+dat$dee2 <- dat$ln_trademil - dat$ln_gdpmin
+dat$mac2 <- dat$ln_trademil - dat$ln_gdpmax
+dat$frank2 <- dat$dee2 / dat$mac2 # proportion of smaller to bigger
+dat$frank2 <- dat$mac2 / dat$dee2 # proportion of smaller to bigger
+dat$fattymagoo2 <- dat$mac2 - dat$dee2 # difference in smaller and bigger
+dat$dee3 <- dat$trademil - dat$gdpmin
+dat$mac3 <- dat$trademil - dat$gdpmax
+dat$mac3 <- ifelse(is.na(log(dat$mac2)), NA, log(dat$mac2))
+dat$fattymagoo3 <- (dat$mac2 - dat$dee2)^2
+dat$frank3 <- log(dat$dee2) - log(dat$mac2)
 
 # Other dyadic variables
 dat$lnccdist <- ifelse(dat$ccdistance == 0, 0, log(dat$ccdistance))
@@ -328,6 +351,8 @@ dat$ycubed  = (dat$year^3) / 1000
 dat$Wmin = rowMins(cbind(dat$W1, dat$W2))
 dat$Wmax = rowMaxs(cbind(dat$W1, dat$W2))
 dat$govcrisesdy = ifelse(dat$GovCrises1 > 0 | dat$GovCrises2 > 0, 1, 0)
+dat$igosum = replace(dat$igosum, is.na(dat$igosum), 0)
+dat$defense = replace(dat$defense, is.na(dat$defense), 0)
 
 # Lags
 datlag <- dat %>% arrange(dyad, year) %>% mutate(
@@ -343,6 +368,15 @@ datlag <- dat %>% arrange(dyad, year) %>% mutate(
   
   lag_ln_gdpcapmin = lag(ln_gdpcapmin),
   lag_ln_gdpcapmax = lag(ln_gdpcapmax),
+  
+  lag_pch_gdpmin = lag(pch_gdpmin),
+  lag_pch_gdpmax = lag(pch_gdpmax),
+  lag_pch_gdpcapmin = lag(pch_gdpcapmin),
+  lag_pch_gdpcapmax = lag(pch_gdpcapmax),
+  lag_pch_ln_gdpmin = lag(pch_ln_gdpmin),
+  lag_pch_ln_gdpmax = lag(pch_ln_gdpmax),
+  lag_pch_ln_gdpcapmin = lag(pch_ln_gdpcapmin),
+  lag_pch_ln_gdpcapmax = lag(pch_ln_gdpcapmax),
   
   lag_trade = lag(trade),
   lag_ln_trade = lag(ln_trade),
@@ -417,14 +451,19 @@ datlag <- dat %>% arrange(dyad, year) %>% mutate(
   
   lgovcrises1 = lag(GovCrises1),
   lgovcrises2 = lag(GovCrises2),
-  lgovcrisesDy = lag(govcrisesdy),
+  lgovcrisesdy = lag(govcrisesdy),
   
   lagdee = lag(dee),
+  lagdee2 = lag(dee2),
   lagmac = lag(mac),
-  lagfrank = lag(frank)
+  lagmac2 = lag(mac2),
+  lagfrank = lag(frank),
+  lagfrank2 = lag(frank2),
+  lagfattymagoo = lag(fattymagoo),
+  lagfattymagoo2 = lag(fattymagoo2)
 )
 
-write_rds(dat, "./data/TradeInputs.RDS")
+write_rds(datlag, "./data/TradeInputs.RDS")
 
 #> with(dat, cor(cbind(ldyterrclaim, lag_ln_gdp1, lag_ln_gdp2, lag_ln_gdpcap1, lag_ln_gdpcap2, contdir, ldefense, lcaprat, lpol1, lpol2, year, y2), use = "complete.obs"))
 # 
