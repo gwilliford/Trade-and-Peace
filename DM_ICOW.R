@@ -6,7 +6,7 @@ library(stringr)
 library(tibble)
 library(DescTools)
 
-if(!exists("dat")) datlag <- load("./data/TradeInputs.RDS")
+if(!exists("datlag")) datlag <- readRDS("./data/TradeInputs.RDS")
 
 ##### ICOW settlement data
 icow_set <- read_dta("./data/ICOWsettle.dta") %>%
@@ -60,10 +60,12 @@ icow_part_cyr <- icow_part_cyr %>%
     clstart   = clstop - 1,
     
     # Spell variables for cumagr, cumagriss, cummid
+    cumatt    = cumsum(attanyp),
     cumagr    = cumsum(agree),
     cumagriss = cumsum(agreeiss),
     cummid    = cumsum(midissyr),
     
+    cumatt    = if_else(agree == 1, cumatt - 1, cumatt),
     cumagr    = if_else(agree == 1, cumagr - 1, cumagr),
     cumagriss = if_else(agreeiss == 1, cumagriss - 1, cumagriss),
     cummid    = if_else(midissyr == 1, cummid - 1, cummid),
@@ -72,6 +74,17 @@ icow_part_cyr <- icow_part_cyr %>%
   ) %>% 
   ungroup(icow_part_cyr)
 
+# Time until attempt variables
+icow_part_cyr <- icow_part_cyr %>%
+  group_by(claimdy, cumatt) %>%
+  mutate(
+    at_termyr = max(year),
+    at_term = if_else(at_termyr == year, 1, 0),
+    at_stop = cumsum(one),
+    at_start = at_stop - 1,
+  ) %>% 
+  ungroup(icow_part_cyr)
+  
 # Time until agreement variables
 icow_part_cyr <- icow_part_cyr %>%
   group_by(claimdy, cumagr) %>%
@@ -105,6 +118,26 @@ icow_part_cyr <- icow_part_cyr %>%
   ungroup(icow_part_cyr)
 icow_part_cyr <- left_join(icow_part_cyr, datlag)
 
+icow_part_cyr$ldefense <- replace(icow_part_cyr$ldefense, is.na(icow_part_cyr$ldefense), 0)
+icow_part_cyr$igosum <- replace(icow_part_cyr$igosum, is.na(icow_part_cyr$igosum), 0)
+
+icow <- icow_part_cyr
+write_rds(icow_part_cyr, "./data/ICOWFinal.RDS")
+
+# icow_part_cyr$tdepmin <- icow_part_cyr$dee
+# icow_part_cyr$tdepmax <- icow_part_cyr$frank
+# icow_part_cyr$tdepavg <- (icow_part_cyr$tdepmin + icow_part_cyr$tdepmax) / 2
+# icow_part_cyr$tdepdif <- icow_part_cyr$tdepmax - icow_part_cyr$tdepmin
+# 
+# icow_part_cyr$lncaprat <- log(icow_part_cyr$lcaprat)
+# icow_part_cyr$igosum <- ifelse(is.na(icow_part_cyr$igosum), 0, icow_part_cyr$igosum)
+# icow_part_cyr$c <- icow_part_cyr$clstop
+# icow_part_cyr$c2 <- icow_part_cyr$clstop^2 / 1000
+# icow_part_cyr$c3 <- icow_part_cyr$clstop^3 / 10000
+
+
+
+
 # View(icow_part_cyr[, c("claimdy", "year", 
                        "agree", "cumagr", "agstart", "agstop", "agtermyr", "agterm",
                        "midissyr", "cummid", "midstart", "midstop", "midterm", "midtermyr",
@@ -134,16 +167,6 @@ icow_part_cyr <- left_join(icow_part_cyr, datlag)
 # icow_part_cyr$pikachu2 <- ifelse(icow_part_cyr$pikachu > 1, 1, icow_part_cyr$pikachu)
 # summary(icow_part_cyr$bulbasaur) * 100
 
-icow_part_cyr$tdepmin <- icow_part_cyr$dee
-icow_part_cyr$tdepmax <- icow_part_cyr$frank
-icow_part_cyr$tdepavg <- (icow_part_cyr$tdepmin + icow_part_cyr$tdepmax) / 2
-icow_part_cyr$tdepdif <- icow_part_cyr$tdepmax - icow_part_cyr$tdepmin
-
-icow_part_cyr$lncaprat <- log(icow_part_cyr$lcaprat)
-icow_part_cyr$igosum <- ifelse(is.na(icow_part_cyr$igosum), 0, icow_part_cyr$igosum)
-icow_part_cyr$c <- icow_part_cyr$clstop
-icow_part_cyr$c2 <- icow_part_cyr$clstop^2 / 1000
-icow_part_cyr$c3 <- icow_part_cyr$clstop^3 / 10000
 
 # # Time from claimstart to MID variables
 # icow_part_cyr$cummid = ifelse(icow_part_cyr$midissyr == 1, icow_part_cyr$cummid - 1, icow_part_cyr$cummid)
