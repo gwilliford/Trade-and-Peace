@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (MiKTeX 2.9.7250 64-bit) (preloaded format=pdflatex 2019.11.21)  1 MAY 2020 03:47
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (MiKTeX 2.9.7250 64-bit) (preloaded format=pdflatex 2019.11.21)  2 MAY 2020 02:15
 entering extended mode
 **./combtab_gap.tex
 (combtab_gap.tex
@@ -1987,25 +1987,9 @@ ut line 17.
 mathkerncmss.fd"
 File: ot1mathkerncmss.fd 2020/01/31 Fontinst v1.933 font definitions for OT1/ma
 thkerncmss.
-) (atgap_table.tex) (aggap_table.tex
-Underfull \vbox (badness 10000) has occurred while \output is active []
+) (at_table.tex) [1
 
- [1
-
-{C:/Users/gwill/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}])
-(agissgap_table.tex
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [2])
-(cltermgap_table.tex
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [3])
-(midtermgap_table.tex
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [4])
-[5]
+{C:/Users/gwill/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}]
 \tf@nav=\write6
 \openout6 = `combtab_gap.nav'.
 
@@ -2024,19 +2008,19 @@ Package rerunfilecheck Info: File `combtab_gap.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
  ) 
 Here is how much of TeX's memory you used:
- 32293 strings out of 492450
- 647309 string characters out of 3120004
- 705130 words of memory out of 3000000
- 36121 multiletter control sequences out of 15000+200000
+ 32265 strings out of 492450
+ 646590 string characters out of 3120004
+ 684145 words of memory out of 3000000
+ 36109 multiletter control sequences out of 15000+200000
  540534 words of font info for 54 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 58i,14n,78p,852b,782s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 58i,14n,78p,861b,707s stack positions out of 5000i,500n,10000p,200000b,50000s
 <C:/Users/gwill/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts
 /cm/cmss17.pfb><C:/Users/gwill/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/pu
 blic/amsfonts/cm/cmsy10.pfb>
-Output written on combtab_gap.pdf (5 pages, 54722 bytes).
+Output written on combtab_gap.pdf (1 page, 29058 bytes).
 PDF statistics:
- 151 PDF objects out of 1000 (max. 8388607)
- 11 named destinations out of 1000 (max. 500000)
+ 49 PDF objects out of 1000 (max. 8388607)
+ 3 named destinations out of 1000 (max. 500000)
  43 words of extra memory for PDF output out of 10000 (max. 10000000)
 
