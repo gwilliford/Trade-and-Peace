@@ -1,0 +1,27 @@
+load(file = "./models/atgap.Rdata")
+atgap1_t <- tvtable.tvcure(atgap1, format = "long")
+atgap2_t <- tvtable.tvcure(atgap2, format = "long")
+atgap3_t <- tvtable.tvcure(atgap3, format = "long")
+atgap4_t <- tvtable.tvcure(atgap4, format = "long")
+atgap_table <- tvtable_combine(c("atgap1_t", "atgap2_t", "atgap3_t", "atgap4_t"), format = "long", footnote = "text")
+x <- tvtable_xtable(atgap_table, caption = "Peaceful Settlement Attempts")
+printer(x, file = "./tables/atgap_table.tex", tabular.enviroment = "tabularx", booktabs = T)
+
+
+
+
+summary(icow_part_cyr$lagdee2)
+summary(icow_part_cyr$lagmac2)
+summary(icow_part_cyr$lagfrank2)
+summary(icow_part_cyr$lagfattymagoo2)
+
+0.4025242
+
+trade constitutes 40% of gdp of the weaker state
+
+if(!exists("icow_part_cyr")) icow_part_cyr <- readRDS("./data/ICOWFinal.RDS")
+
+a <- log(icow_part_cyr$trademil/icow_part_cyr$gdpmin)
+
+
+
