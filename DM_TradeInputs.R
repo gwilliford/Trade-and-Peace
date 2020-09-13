@@ -15,13 +15,13 @@ library(DescTools)
 
 ### Import Monadic Data
 madd = read_csv("./data/madd.csv")
-dcap = read_dta("./data/NMC_5_0.dta")
-dpol = read_excel("./data/p4v2016.xls")
-dpol = select(dpol, ccode, year, polity2)
+#dcap = read_dta("./data/NMC_5_0.dta")
+#dpol = read_excel("./data/p4v2016.xls")
+#dpol = select(dpol, ccode, year, polity2)
 dw   = read_dta("./data/bdm2s2_nation_year_data_may2002.dta") %>%
   select(ccode, year, W, S, GovCrises, strikes)
 chisols <- read_dta('./data/CHISOLSstyr4_0.dta')
-select(dpol, ccode, year, polity2)
+#select(dpol, ccode, year, polity2)
 chisols <- dplyr::select(chisols, ccode, year, totalldrtrans, leadertrans, solschange, solschdum, solschange30, solsch30dum, solsminchange, solsminchdum)
 
 ### Create common identifiers for dyadic data
@@ -56,9 +56,9 @@ acd <- acd %>%
   summarize(cw = max(cw))
 
 ### Merge Monadic Data
-dmon = full_join(madd, dcap)
-dmon = full_join(dmon, dpol)
-dmon = full_join(dmon, chisols)
+dmon = full_join(madd, chisols) # dcap
+##dmon = full_join(dmon, dpol)
+# dmon = full_join(dmon, chisols)
 dmon = full_join(dmon, dw)
 dmon = full_join(dmon, ead)
 dmon = full_join(dmon, mtrade)
@@ -88,13 +88,13 @@ dmon <- dmon %>%
     pch_ln_gdpcap = (ln_gdpcap - lag_ln_gdpcap)/lag_ln_gdpcap * 100,
     
     # Control vars
-    lcinc = lag(cinc) * 10,
-    lag_pop = lag(pop),
-    ln_pop = log(pop),
-    lag_ln_pop = lag(ln_pop),
+    # lcinc = lag(cinc) * 10,
+    # lag_pop = lag(pop),
+    # ln_pop = log(pop),
+    # lag_ln_pop = lag(ln_pop),
     
     # Institutional vars
-    lpol = lag(polity2), 
+    # lpol = lag(polity2), 
     lagW = lag(W),
     lagS = lag(S),
     lcw = lag(cw)
@@ -105,19 +105,21 @@ sum(duplicated(dmon[, c("ccode", "year")]))
 dmon[duplicated(dmon[, c("ccode", "year")]),]
 
 # Create separate versions of monadic data
-dmon1 = dmon %>% select(-"version") %>% setNames(paste0(names(.), "1")) %>% rename(year = year1)
-dmon2 = dmon %>% select(-"version") %>% setNames(paste0(names(.), "2")) %>% rename(year = year2)
+dmon1 = dmon %>% setNames(paste0(names(.), "1")) %>% rename(year = year1)
+dmon2 = dmon %>% setNames(paste0(names(.), "2")) %>% rename(year = year2)
 #write.csv(dmon1, "./data/monad1.csv")
-write_dta(dmon1, "./data/monad1.dta", version = 13)
-write_dta(dmon2, "./data/monad2.dta", version = 13)
+#write_dta(dmon1, "./data/monad1.dta", version = 13)
+#write_dta(dmon2, "./data/monad2.dta", version = 13)
 
 ########### DYADIC DATA ##########
-ddist  <- read_csv("./data/COW_Distance_NewGene_Export.csv") %>%
-  select(ccode1, ccode2, year, ccdistance, mindistance)
-dcont  <- read_csv("./data/COW_Contiguity_NewGeneExport.csv") %>%
-  select(ccode1, ccode2, year, conttype)
-dcont <- dcont[dcont$ccode1 < dcont$ccode2, ]
+# ddist  <- read_csv("./data/COW_Distance_NewGene_Export.csv") %>%
+#   select(ccode1, ccode2, year, ccdistance, mindistance)
+# dcont  <- read_csv("./data/COW_Contiguity_NewGeneExport.csv") %>%
+#   select(ccode1, ccode2, year, conttype)
+# dcont <- dcont[dcont$ccode1 < dcont$ccode2, ]
 triv <- read_dta("./data/ThompsonDyadYear.dta")
+triv$ccode1 <- as.numeric(triv$ccode1)
+triv$ccode2 <- as.numeric(triv$ccode2)
 dally <- read_csv("./data/alliance_v4.1_by_dyad_yearly.csv")
 dally$dyad <- undirdyads(dally, ccode1, ccode2)
 dally <- dally %>%
@@ -127,6 +129,8 @@ dally <- dally %>%
   ) %>% 
   select(dyad, year, defense)#neutrality, nonaggression, entente
 igo <- read_dta("./data/igocount.dta")
+igo$ccode1 <- as.numeric(igo$ccode1)
+igo$ccode2 <- as.numeric(igo$ccode2)
 
 ### Gibler MID data
 dmid <- read_csv("./data/gml-ndy-disputes-2.0.csv")
@@ -177,8 +181,10 @@ dtrade <- dtrade %>% select(ccode1, ccode2, dyad, year, flow1, flow2,
                             flow1mil, flow2mil, "trademil" = "smoothtotrademil")
 
 ### Merge dyadic data
-ddy <- left_join(dtrade, ddist) 
-ddy <- left_join(ddy, dcont)
+ddy <- read.csv("C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis - Territory Onset/data/newgene.csv")
+ddy$dyad = undirdyads(ddy, ccode1, ccode2)
+ddy <- left_join(ddy, dtrade) 
+# ddy <- left_join(ddy, dcont)
 # ddy <- left_join(ddy, icow_full_dyr)
 # ddy <- left_join(ddy, icow_part_dyr)
 ddy <- left_join(ddy, dally)
@@ -190,7 +196,7 @@ ddy <- left_join(ddy, igo)
 ######### Merge dyadic and monadic data ###########
 dat <- left_join(ddy, dmon1)
 dat <- left_join(dat, dmon2)
-dat <- rename(dat, 'polity1' = 'polity21', 'polity2' = 'polity22')
+dat <- rename(dat, 'polity1' = 'polity2_1', 'polity2' = 'polity2_2')
 
 # Dyadic trade variables
 dat$ln_trade = ifelse(dat$trade == 0, 0, log(dat$trade))
@@ -353,7 +359,7 @@ dat$ndymid <- ifelse(is.na(dat$ndymid), 0, dat$ndymid)
 dat$bdymid <- ifelse(is.na(dat$bdymid), 0, dat$bdymid)
 dat$fatality <- ifelse(is.na(dat$fatality), 0, dat$fatality)
 dat$trival <- ifelse(is.na(dat$trival), 0, 1)
-dat$caprat <- rowMaxs(cbind(dat$cinc1, dat$cinc2)) / (dat$cinc1 + dat$cinc2)
+dat$caprat <- rowMaxs(cbind(dat$cinc_1, dat$cinc_2)) / (dat$cinc_1 + dat$cinc_2)
 dat$ln_caprat <- ifelse(dat$caprat == 0, 0, log(dat$caprat))
 dat$polmin <- rowMins(cbind(dat$polity1, dat$polity2))
 dat$polmax <- rowMaxs(cbind(dat$polity1, dat$polity2))
@@ -479,7 +485,7 @@ datlag <- dat %>% arrange(dyad, year) %>% mutate(
   lagfattymagoo2 = lag(fattymagoo2)
 )
 
-write_rds(datlag, "./data/TradeInputs.RDS")
+write_rds(datlag, "C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis - Territory Onset/data/terrdatav2.RDS")
 
 #> with(dat, cor(cbind(ldyterrclaim, lag_ln_gdp1, lag_ln_gdp2, lag_ln_gdpcap1, lag_ln_gdpcap2, contdir, ldefense, lcaprat, lpol1, lpol2, year, y2), use = "complete.obs"))
 # 
