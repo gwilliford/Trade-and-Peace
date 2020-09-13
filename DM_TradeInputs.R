@@ -47,6 +47,14 @@ mtrade <- mtrade %>%
 ### Leader support data
 ead <- read_dta("./data/EAD+2.0+Annual+0101019.dta")
 
+### ACD data
+acd <- read_excel("./data/ucdpprioacd.xlsm")
+acd$ccode <- as.numeric(acd$gwno_a)
+acd$cw <- 1
+acd <- acd %>%
+  group_by(ccode, year) %>%
+  summarize(cw = max(cw))
+
 ### Merge Monadic Data
 dmon = full_join(madd, dcap)
 dmon = full_join(dmon, dpol)
@@ -54,6 +62,7 @@ dmon = full_join(dmon, chisols)
 dmon = full_join(dmon, dw)
 dmon = full_join(dmon, ead)
 dmon = full_join(dmon, mtrade)
+dmon = full_join(dmon, acd)
 
 ### Monadic Lags
 dmon <- dmon %>%
@@ -88,6 +97,7 @@ dmon <- dmon %>%
     lpol = lag(polity2), 
     lagW = lag(W),
     lagS = lag(S),
+    lcw = lag(cw)
   )
 
 # Check for duplicates
@@ -97,6 +107,9 @@ dmon[duplicated(dmon[, c("ccode", "year")]),]
 # Create separate versions of monadic data
 dmon1 = dmon %>% select(-"version") %>% setNames(paste0(names(.), "1")) %>% rename(year = year1)
 dmon2 = dmon %>% select(-"version") %>% setNames(paste0(names(.), "2")) %>% rename(year = year2)
+#write.csv(dmon1, "./data/monad1.csv")
+write_dta(dmon1, "./data/monad1.dta", version = 13)
+write_dta(dmon2, "./data/monad2.dta", version = 13)
 
 ########### DYADIC DATA ##########
 ddist  <- read_csv("./data/COW_Distance_NewGene_Export.csv") %>%
@@ -148,6 +161,7 @@ dmiddy <- dmid %>%
 #   ) %>%
 #   select(ccode, year, nmidcyr, bmidcyr)
 # 
+#
 
 dtrade <- read_csv("./data/Dyadic_COW_4.0.csv")
 dtrade$dyad = undirdyads(dtrade, ccode1, ccode2)
@@ -353,6 +367,7 @@ dat$Wmax = rowMaxs(cbind(dat$W1, dat$W2))
 dat$govcrisesdy = ifelse(dat$GovCrises1 > 0 | dat$GovCrises2 > 0, 1, 0)
 dat$igosum = replace(dat$igosum, is.na(dat$igosum), 0)
 dat$defense = replace(dat$defense, is.na(dat$defense), 0)
+dat$lcw = ifelse(dat$lcw1 == 1 | dat$lcw2 == 1, 1, 0)
 
 # Lags
 datlag <- dat %>% arrange(dyad, year) %>% mutate(
@@ -452,6 +467,7 @@ datlag <- dat %>% arrange(dyad, year) %>% mutate(
   lgovcrises1 = lag(GovCrises1),
   lgovcrises2 = lag(GovCrises2),
   lgovcrisesdy = lag(govcrisesdy),
+  # lcw = lag(cw),
   
   lagdee = lag(dee),
   lagdee2 = lag(dee2),
