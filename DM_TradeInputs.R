@@ -15,13 +15,12 @@ library(DescTools)
 
 ### Import Monadic Data
 madd = read_csv("./data/madd.csv")
-#dcap = read_dta("./data/NMC_5_0.dta")
-#dpol = read_excel("./data/p4v2016.xls")
-#dpol = select(dpol, ccode, year, polity2)
+dcap = read_dta("./data/NMC_5_0.dta")
+dpol = read_excel("./data/p4v2016.xls")
+dpol = select(dpol, ccode, year, polity2)
 dw   = read_dta("./data/bdm2s2_nation_year_data_may2002.dta") %>%
   select(ccode, year, W, S, GovCrises, strikes)
 chisols <- read_dta('./data/CHISOLSstyr4_0.dta')
-#select(dpol, ccode, year, polity2)
 chisols <- dplyr::select(chisols, ccode, year, totalldrtrans, leadertrans, solschange, solschdum, solschange30, solsch30dum, solsminchange, solsminchdum)
 
 ### Create common identifiers for dyadic data
@@ -56,9 +55,10 @@ acd <- acd %>%
   summarize(cw = max(cw))
 
 ### Merge Monadic Data
-dmon = full_join(madd, chisols) # dcap
-##dmon = full_join(dmon, dpol)
-# dmon = full_join(dmon, chisols)
+dmon = full_join(madd, dcap)
+dmon = full_join(dmon, chisols)
+dmon = full_join(dmon, dpol)
+dmon = full_join(dmon, chisols)
 dmon = full_join(dmon, dw)
 dmon = full_join(dmon, ead)
 dmon = full_join(dmon, mtrade)
@@ -94,7 +94,7 @@ dmon <- dmon %>%
     # lag_ln_pop = lag(ln_pop),
     
     # Institutional vars
-    # lpol = lag(polity2), 
+    lpol = lag(polity2), 
     lagW = lag(W),
     lagS = lag(S),
     lcw = lag(cw)
@@ -112,11 +112,11 @@ dmon2 = dmon %>% setNames(paste0(names(.), "2")) %>% rename(year = year2)
 #write_dta(dmon2, "./data/monad2.dta", version = 13)
 
 ########### DYADIC DATA ##########
-# ddist  <- read_csv("./data/COW_Distance_NewGene_Export.csv") %>%
-#   select(ccode1, ccode2, year, ccdistance, mindistance)
-# dcont  <- read_csv("./data/COW_Contiguity_NewGeneExport.csv") %>%
-#   select(ccode1, ccode2, year, conttype)
-# dcont <- dcont[dcont$ccode1 < dcont$ccode2, ]
+ddist  <- read_csv("./data/COW_Distance_NewGene_Export.csv") %>%
+  select(ccode1, ccode2, year, ccdistance, mindistance)
+dcont  <- read_csv("./data/COW_Contiguity_NewGeneExport.csv") %>%
+  select(ccode1, ccode2, year, conttype)
+dcont <- dcont[dcont$ccode1 < dcont$ccode2, ]
 triv <- read_dta("./data/ThompsonDyadYear.dta")
 triv$ccode1 <- as.numeric(triv$ccode1)
 triv$ccode2 <- as.numeric(triv$ccode2)
@@ -181,22 +181,22 @@ dtrade <- dtrade %>% select(ccode1, ccode2, dyad, year, flow1, flow2,
                             flow1mil, flow2mil, "trademil" = "smoothtotrademil")
 
 ### Merge dyadic data
-ddy <- read.csv("C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis - Territory Onset/data/newgene.csv")
-ddy$dyad = undirdyads(ddy, ccode1, ccode2)
-ddy <- left_join(ddy, dtrade) 
-# ddy <- left_join(ddy, dcont)
+#ddy <- read.csv("C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis - Territory Onset/data/newgene.csv")
+#ddy$dyad = undirdyads(ddy, ccode1, ccode2)
+ddy <- full_join(dtrade, dcont) 
+ddy <- full_join(ddy, ddist)
 # ddy <- left_join(ddy, icow_full_dyr)
 # ddy <- left_join(ddy, icow_part_dyr)
-ddy <- left_join(ddy, dally)
-ddy <- left_join(ddy, dmiddy)
-ddy <- left_join(ddy, triv)
-ddy <- left_join(ddy, igo)
+ddy <- full_join(ddy, dally)
+ddy <- full_join(ddy, dmiddy)
+ddy <- full_join(ddy, triv)
+ddy <- full_join(ddy, igo)
 # Full joins are unnecessary - merging to trade data - lags of this are going to mean that I lose all of the first observations - so losing lags for that first var doesn't matterW%$
 
 ######### Merge dyadic and monadic data ###########
 dat <- left_join(ddy, dmon1)
 dat <- left_join(dat, dmon2)
-dat <- rename(dat, 'polity1' = 'polity2_1', 'polity2' = 'polity2_2')
+#dat <- rename(dat, 'polity1' = 'polity2_1', 'polity2' = 'polity2_2')
 
 # Dyadic trade variables
 dat$ln_trade = ifelse(dat$trade == 0, 0, log(dat$trade))
@@ -210,7 +210,7 @@ dat <- ungroup(dat %>% group_by(dyad) %>% mutate(
   mln_trademil = mean(ln_trademil, na.rm = T)
 ))
 dat$aggtrademin = rowMins(cbind(dat$aggtrade1, dat$aggtrade2))
-dat$aggtradenax = rowMaxs(cbind(dat$aggtrade1, dat$aggtrade2))
+dat$aggtrademax = rowMaxs(cbind(dat$aggtrade1, dat$aggtrade2))
 
 # Deviations from mean dyadic trade
 dat$trdev = dat$trade - dat$mtrade
@@ -359,12 +359,12 @@ dat$ndymid <- ifelse(is.na(dat$ndymid), 0, dat$ndymid)
 dat$bdymid <- ifelse(is.na(dat$bdymid), 0, dat$bdymid)
 dat$fatality <- ifelse(is.na(dat$fatality), 0, dat$fatality)
 dat$trival <- ifelse(is.na(dat$trival), 0, 1)
-dat$caprat <- rowMaxs(cbind(dat$cinc_1, dat$cinc_2)) / (dat$cinc_1 + dat$cinc_2)
+dat$caprat <- rowMaxs(cbind(dat$cinc1, dat$cinc2)) / (dat$cinc1 + dat$cinc2)
 dat$ln_caprat <- ifelse(dat$caprat == 0, 0, log(dat$caprat))
-dat$polmin <- rowMins(cbind(dat$polity1, dat$polity2))
-dat$polmax <- rowMaxs(cbind(dat$polity1, dat$polity2))
-dat$demdy <- ifelse(dat$polity1 > 5 & dat$polity2 > 5, 1, 0)
-dat$autdy <- ifelse(dat$polity1 < -5 & dat$polity2 < -5, 1, 0)
+dat$polmin <- rowMins(cbind(dat$polity21, dat$polity22))
+dat$polmax <- rowMaxs(cbind(dat$polity21, dat$polity22))
+dat$demdy <- ifelse(dat$polity21 > 5 & dat$polity22 > 5, 1, 0)
+dat$autdy <- ifelse(dat$polity21 < -5 & dat$polity22 < -5, 1, 0)
 dat$samereg <- ifelse(dat$demdy == 1 | dat$autdy == 1, 1, 0)
 dat$ysquare = (dat$year^2) / 1000
 dat$ycubed  = (dat$year^3) / 1000
@@ -486,6 +486,8 @@ datlag <- dat %>% arrange(dyad, year) %>% mutate(
 )
 
 write_rds(datlag, "C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis - Territory Onset/data/terrdatav2.RDS")
+write_dta(datlag, "C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis - Territory Onset/data/terrdatav2.dta", version = 13)
+
 
 #> with(dat, cor(cbind(ldyterrclaim, lag_ln_gdp1, lag_ln_gdp2, lag_ln_gdpcap1, lag_ln_gdpcap2, contdir, ldefense, lcaprat, lpol1, lpol2, year, y2), use = "complete.obs"))
 # 
