@@ -1,4 +1,3 @@
-# Estimating Unrealized Gains from Trade
 setwd("C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis")
 library(readr)
 library(readxl)
@@ -11,30 +10,23 @@ library(MuMIn)
 library(optimx)
 library(DescTools)
 
-### Does igo need to be recoded as missing?
-
+################################################################################
 ### Import Monadic Data
+################################################################################
 madd = read_csv("./data/madd.csv")
+
 dcap = read_dta("./data/NMC_5_0.dta")
+
 dpol = read_excel("./data/p4v2016.xls")
 dpol = select(dpol, ccode, year, polity2)
+
 dw   = read_dta("./data/bdm2s2_nation_year_data_may2002.dta") %>%
   select(ccode, year, W, S, GovCrises, strikes)
+
 chisols <- read_dta('./data/CHISOLSstyr4_0.dta')
 chisols <- dplyr::select(chisols, ccode, year, totalldrtrans, leadertrans, solschange, solschdum, solschange30, solsch30dum, solsminchange, solsminchdum)
 
-### Create common identifiers for dyadic data
-undirdyads <- function(df, ccode1, ccode2) {
-  attach(df)
-  ccodes = cbind(ccode1, ccode2)
-  cmin   = sprintf("%03d", matrixStats::rowMins(ccodes))
-  cmax   = sprintf("%03d", matrixStats::rowMaxs(ccodes))
-  dyad = as.numeric(paste(cmin, cmax, sep = ""))
-  detach(df)
-  return(dyad)
-}
 
-### Monadic trade
 mtrade <- read_csv('./data/National_COW_4.0.csv')
 mtrade$importsmil <- mtrade$imports * 1000000
 mtrade$exportsmil <- mtrade$exports * 1000000
@@ -43,10 +35,9 @@ mtrade$aggtrademil <- mtrade$importsmil + mtrade$exportsmil
 mtrade <- mtrade %>%
   select(ccode, year, imports, exports, importsmil, exportsmil, aggtrade, aggtrademil)
 
-### Leader support data
+# Leader support data
 ead <- read_dta("./data/EAD+2.0+Annual+0101019.dta")
 
-### ACD data
 acd <- read_excel("./data/ucdpprioacd.xlsm")
 acd$ccode <- as.numeric(acd$gwno_a)
 acd$cw <- 1
@@ -100,26 +91,41 @@ dmon <- dmon %>%
     lcw = lag(cw)
   )
 
-# Check for duplicates
-sum(duplicated(dmon[, c("ccode", "year")]))
-dmon[duplicated(dmon[, c("ccode", "year")]),]
-
-# Create separate versions of monadic data
 dmon1 = dmon %>% setNames(paste0(names(.), "1")) %>% rename(year = year1)
 dmon2 = dmon %>% setNames(paste0(names(.), "2")) %>% rename(year = year2)
-#write.csv(dmon1, "./data/monad1.csv")
-#write_dta(dmon1, "./data/monad1.dta", version = 13)
-#write_dta(dmon2, "./data/monad2.dta", version = 13)
 
-########### DYADIC DATA ##########
+################################################################################
+### Import dyadic data
+################################################################################
+
+# undirdyads <- function(df, ccode1, ccode2) {
+#   attach(df)
+#   ccodes = cbind(ccode1, ccode2)
+#   cmin   = sprintf("%03d", matrixStats::rowMins(ccodes))
+#   cmax   = sprintf("%03d", matrixStats::rowMaxs(ccodes))
+#   dyad = as.numeric(paste(cmin, cmax, sep = ""))
+#   detach(df)
+#   return(dyad)
+# }
+
+
 ddist  <- read_csv("./data/COW_Distance_NewGene_Export.csv") %>%
   select(ccode1, ccode2, year, ccdistance, mindistance)
+ddist$dyad = undirdyads(ddist, ccode1, ccode2)
+ddist <- select(ddist, -ccode1, -ccode2)
+
 dcont  <- read_csv("./data/COW_Contiguity_NewGeneExport.csv") %>%
   select(ccode1, ccode2, year, conttype)
 dcont <- dcont[dcont$ccode1 < dcont$ccode2, ]
+dcont$dyad = undirdyads(dcont, ccode1, ccode2)
+dcont <- select(dcont, -ccode1, -ccode2)
+
 triv <- read_dta("./data/ThompsonDyadYear.dta")
 triv$ccode1 <- as.numeric(triv$ccode1)
 triv$ccode2 <- as.numeric(triv$ccode2)
+triv$dyad <- undirdyads(triv, ccode1, ccode2)
+triv = triv %>% select(-ccode1, -ccode2)
+
 dally <- read_csv("./data/alliance_v4.1_by_dyad_yearly.csv")
 dally$dyad <- undirdyads(dally, ccode1, ccode2)
 dally <- dally %>%
@@ -128,9 +134,12 @@ dally <- dally %>%
     defense = sum(defense, na.rm = T)
   ) %>% 
   select(dyad, year, defense)#neutrality, nonaggression, entente
+
 igo <- read_dta("./data/igocount.dta")
 igo$ccode1 <- as.numeric(igo$ccode1)
 igo$ccode2 <- as.numeric(igo$ccode2)
+igo$dyad <- undirdyads(igo, ccode1, ccode2)
+igo = igo %>% select(-ccode1, -ccode2)
 
 ### Gibler MID data
 dmid <- read_csv("./data/gml-ndy-disputes-2.0.csv")
@@ -144,28 +153,7 @@ dmiddy <- dmid %>%
     bdymid = 1, 
     fatality = max(fatality)
   )
-# cmid1 <- dmid %>% 
-#   group_by(ccode1, year) %>%
-#   summarize(
-#     nmidcyr1 = sum(dmidyr, na.rm = T),
-#     bmidcyr1 = 1
-#   ) %>%
-#   select("ccode1" = "ccode", year, nmidcyr1, bmidcyr1)
-# cmid2 <- dmid %>%
-#   group_by(ccode2, year) %>%
-#   summarize(
-#     nmidcyr2 = sum(dmidyr, na.rm = T),
-#     bmidcyr2 = 1
-#   ) %>% 
-#   select("ccode2" = "ccode", year, nmidcyr2, bmidcyr2)
-# cmida <- full_join(cmid1, cmid2) %>%
-#   mutate(
-#     nmidcyr = nmidcyr1 + nmidcyr2,
-#     bmidcyr = bmidcyr1 + bmidcyr2
-#   ) %>%
-#   select(ccode, year, nmidcyr, bmidcyr)
-# 
-#
+dmid = select(dmid, -ccode1, -ccode2)
 
 dtrade <- read_csv("./data/Dyadic_COW_4.0.csv")
 dtrade$dyad = undirdyads(dtrade, ccode1, ccode2)
@@ -180,9 +168,6 @@ dtrade <- dtrade %>% select(ccode1, ccode2, dyad, year, flow1, flow2,
                             "trade" = "smoothtotrade",
                             flow1mil, flow2mil, "trademil" = "smoothtotrademil")
 
-### Merge dyadic data
-#ddy <- read.csv("C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis - Territory Onset/data/newgene.csv")
-#ddy$dyad = undirdyads(ddy, ccode1, ccode2)
 ddy <- full_join(dtrade, dcont) 
 ddy <- full_join(ddy, ddist)
 # ddy <- left_join(ddy, icow_full_dyr)
@@ -191,9 +176,7 @@ ddy <- full_join(ddy, dally)
 ddy <- full_join(ddy, dmiddy)
 ddy <- full_join(ddy, triv)
 ddy <- full_join(ddy, igo)
-# Full joins are unnecessary - merging to trade data - lags of this are going to mean that I lose all of the first observations - so losing lags for that first var doesn't matterW%$
 
-######### Merge dyadic and monadic data ###########
 dat <- left_join(ddy, dmon1)
 dat <- left_join(dat, dmon2)
 #dat <- rename(dat, 'polity1' = 'polity2_1', 'polity2' = 'polity2_2')
@@ -473,7 +456,7 @@ datlag <- dat %>% arrange(dyad, year) %>% mutate(
   lgovcrises1 = lag(GovCrises1),
   lgovcrises2 = lag(GovCrises2),
   lgovcrisesdy = lag(govcrisesdy),
-  # lcw = lag(cw),
+  lcwdy = lag(cw),
   
   lagdee = lag(dee),
   lagdee2 = lag(dee2),
@@ -484,39 +467,6 @@ datlag <- dat %>% arrange(dyad, year) %>% mutate(
   lagfattymagoo = lag(fattymagoo),
   lagfattymagoo2 = lag(fattymagoo2)
 )
-
-write_rds(datlag, "C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis - Territory Onset/data/terrdatav2.RDS")
+sum(duplicated(datlag[, c("dyad", "year")]))
+# write_rds(datlag, "C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis - Territory Onset/data/terrdatav2.RDS")
 write_dta(datlag, "C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis - Territory Onset/data/terrdatav2.dta", version = 13)
-
-
-#> with(dat, cor(cbind(ldyterrclaim, lag_ln_gdp1, lag_ln_gdp2, lag_ln_gdpcap1, lag_ln_gdpcap2, contdir, ldefense, lcaprat, lpol1, lpol2, year, y2), use = "complete.obs"))
-# 
-# write_csv(dat, "./data/TradeInputs.csv")
-# write_rds(dat, "./data/TradeInputs.RDS")
-# region codes
-# ceuro <- icow_part_cyr[icow_part_cyr$region == 2, "chal"]
-# teuro <- icow_part_cyr[icow_part_cyr$region == 2, "tgt"]
-# aeuro <- unlist(c(ceuro, teuro))
-# sort(unique(aeuro))
-# dat$sub  <- ifelse(dat$ccode1 %in% 1:330 | dat$ccode2 %in% 1:330, 1, 0)
-# dat$subr <- ifelse(dat$ccode1 %in% c(1:330, 600:699) | dat$ccode2 %in% c(1:330, 600:699), 1, 0)
-
-# dsub <- na.omit(filter(dat, sub == 1 & year >= 1900) %>% select(ln_trade, anyclaim, lag_ln_gdpmin, lag_ln_gdpmax, lag_ln_gdpcapmin, lag_ln_gdpcapmax, contdir, ldefense, lcaprat, polmin, polmax, dyad, year))
-# a <- opm(ln_trademil ~ anyclaim + lag_ln_gdpmin + lag_ln_gdpmax + lag_ln_gdpcapmin + lag_ln_gdpcapmax +
-#            contdir + ldefense + lcaprat + polmin + polmax,
-#          data = b, subset = dat$year > 1900 & dat$sub == 1,
-#          index = c("dyad", "year"), n.samp = 100)
-
-# saveRDS(dsub, "./data/opminputs.RDS")
-# # Visualize trade
-# library(lattice)
-# dat2 <- dat[dat$dyad == c(2400, 710800, 501560)]
-# dat2 <- dat %>% group_by(year) %>% summarize(
-#   mt = mean(trade, na.rm = T)
-# )
-# xyplot(mt~year, data=dat2, type='l', xlab="Year", ylab='Number of Enforcement Actions', main="Clean Air Act Enforcement Actions by State")
-# 
-# xyplot(trade~year, data=dat, type='l', groups=dyad, xlab="Year", ylab='Number of Enforcement Actions', main="Clean Air Act Enforcement Actions by State")
-# 
-
-# datout <- select(dat, dyad, year, lag_pch_gdpmin, lGovCrisesDy, polmin, polmax, autdy, demdy, samereg, Wmin, Wmax, lag_depdymin, lag_depdymin100, lag_deptotmin, lag_deptotmin100, lag_depothmin, lag_depothmin100, lag_ln_depdymin100, lamin, lamax, lbmin, lbmax, lcmin, lcmax, lcaprat, lpchcaprat, ldefense, contdir, trival, igosum)
