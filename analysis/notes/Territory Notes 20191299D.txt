@@ -1,0 +1,35 @@
+We begin by assuming that states are rational actors who bargain over the distribution of territory, attempting to maximize their expected utility (Fearon 1995). However, territorial disputes are costly. The longer a dispute lasts the and the more intense the dispute the higher the costs. To this end states desire to keep their disputes short while at the same time avoiding militarized conflict, thus saving the costs associated with both of these outcomes. To keep their disputes short, while also avoiding militarized conflict, states will to come to an agreeable distribution of the issues as quickly as possible. For states to find an agreeable distribution of the issues they must first determine their relative probability of successfully capturing their desired distribution of the disputed territory if the dispute were to be fought to an end. States will be able to ascertain their relative probabilities of winning a dispute after they can come to an agreement regarding their relative capabilities and their resolve.\footnote{Capabilities are the state's resources (both endogenous and exogenous) allowing it to wage and win a war and take the territory by force. Resolve is defined as the costs a state is willing to pay in order to ensure the state's desired outcome to the dispute.} However, even after states have come to an agreement between regarding their relative capabilities and resolve they will have difficulty dividing the territory under dispute when the values attached to it are  difficult to divide.
+
+Territory, like all other issues, varies according to its salience and its tangibility (Rosenau 1971, Mansbach and Vasquez 1981, Hensel et. al. 2008). 
+The salience of a piece of territory is determined by the value that members 
+ number of tangible and intangible values attached to the territory. 
+
+Scholars frequently distinguish between tangible stakes
+The tangible aspects of territory include it natural resources, its agricultural and industrial potential, and its population.
+
+
+
+The intangible value of a piece of territory stems from its socially constructed values that have been attached to it through various social and political processes (Goddard 2010). 
+For example, territory can be valued for intangible aspects such ideological, religious, or ethnic value or for its physical attributes such as strategic advantages or access to natural resources (Hensel et. al. 2008). 
+
+
+
+
+
+
+
+
+
+
+ 
+The values attached to a piece of territory can make it more or less difficult to divide the territory and come to an agreeable distribution of the territory. Intangible values, such as ethnic or religous value cannot be divided without, without much of the value attached to the territory being lost. On the other hand, the tangible salience attached to a piece of territory, such as natural resources or even a territory's strategic value, are largely divisible (Hensel and Mitchell 2005).
+
+Since intangible value cannot be divided, disputing states must work around it to reach a negotiated agreement. This can be done through one side making a payment that is equivalent the intangible value minus the costs of the dispute up to that point. This suggests that the the more intangible value that is present the higher the payment that will be needed to bring the dispute to an end. It also suggests that the higher the costs of the dispute, up to that point, the lower the price of the payment. 
+
+At the most basic level, the value that states assign to a piece of territory determines the costs that each state is willing to bear to control it. As a result, challengers are more prone to pursue costly conflict management mechanisms as the overall salience of a claim increases. However, in addition to the overall salience of the territory, we contend that the challenger’s decision to engage in force is influenced by both the level and type of salience that each disputant assigns to the territory individually. Although increases in salience for either state will increase the probability that they engage in costly conflict management tactics, challengers and targets may assign different levels of value to the same piece of territory. 
+
+To the extent that this is the case, the difference in salience between two disputants is generally driven by intangible value attached to the territory. The tangible values of a piece of territory are generally equally desired by both disputants. The tangible values attached to a piece of territory can be exploited by whoever possess the territory. For example, natural resources such as oil possess equal economic value for both states. On the other hand the intangible value attached to a piece of territory, such as the territories value as a homeland or for its ethnic ties, is not always desired by both disputants.\footnote{This observation has been acknowledged by a number of previous scholars, most notably by the Issue Correlates of War data project (Frederick et. al. 2017). In spite of this recognition there have been serious attempts to explore how the un-shared intangible value affects the manner by which states compete over the territory.}  
+
+The exact manner in which higher levels of salience influences the outcome of the bargaining process is dependent  on whether the territory possesses tangible or intangible salience (or both). Although tangible salience influences the costs that a state is willing to pay to control a given piece of territory, because it is highly divisible, such disagreements can often be resolved by making partial concessions. As a result, states should be willing to accept any agreement that is less costly than the status quo (absent information and commitment problems). Under these conditions, states can reach partial agreements that involve making concessions that are equal to the costs of maintaining the status quo.
+
+When states are disputing over territory that possess high levels of intangible salience the territory will lose much of its value if it is divided. Even when states are disputing over territory that is difficult to divide, they will desire to end their disputes in a quick and cost effective manner. Disputing states can come to an agreement over the division of the territory under dispute by offering the state conceding intangible value a compensatory side-payment. However, as the intangible values attached to a piece of territory increase, the more difficult it will be for one side to be able or willing to afford, a compensatory side-payment.
