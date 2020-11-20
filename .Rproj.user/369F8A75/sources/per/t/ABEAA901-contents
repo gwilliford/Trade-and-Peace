@@ -1,0 +1,31 @@
+################################################################################
+# Setup
+################################################################################
+library(tvcure)
+options(scipen = 999)
+
+##### Precompile tvcure functions
+cmpfun(tvcure)
+enableJIT(3)
+
+##### Parallel processing
+cl <- makeCluster(4, "SOCK")
+registerDoSNOW(cl)
+
+################################################################################
+# Data
+################################################################################
+setwd("C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis")
+# Data = datlag
+
+################################################################################
+# Models
+################################################################################
+set.seed(39458230)
+mid-cure <- tvcure(Surv(midstart, midstop, midissyr) ~ lagdee2 + bdymid + lag_pch_gdpmax + lgovcrisesdy + lcw +
+                            demdy + autdy +
+                            lcaprat + ldefense + contdir + igosum, ratyear ~ . - (1 | claimdy) - (1 | year)),
+           family = "bernoulli",
+           prior = set_prior(prior = "student_t(1, 0, 2.5)", class = "b"),
+           cores = 4,
+           data = icow); rat 

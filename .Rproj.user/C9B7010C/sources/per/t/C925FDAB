@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1580810584574.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2372513064",
+    "id" : "C925FDAB",
+    "lastKnownWriteTime" : 1580812184,
+    "last_content_update" : 1580812184538,
+    "path" : "C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis/DM_TradeInputs.R",
+    "project_path" : "DM_TradeInputs.R",
+    "properties" : {
+        "cursorPosition" : "390,0",
+        "scrollLine" : "363"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
