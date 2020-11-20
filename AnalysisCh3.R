@@ -1,181 +1,254 @@
-setwd("C:/Users/gwill/Dropbox/Research/Dissertation/Data Analysis")
-library(tvcure)
-library(ggpubr)
-options(scipen = 999)
-if (!exists("icow_part_cyr")) {
-  icow_part_cyr <- readRDS("./data/ICOWFinal.RDS")
-} else icow <- icow_part_cyr
 
-hazform <- as.formula( ~ icowsal + riveriss + mariss +
-                         recmidwt + recfatwt + recnowt + recyeswt +
-                         lag_pch_gdpmax + lgovcrisesdy + midissyr)
 
-cureform <- as.formula( ~ icowsal + riveriss + mariss +
-                          demdy + autdy +
-                          lcaprat + ldefense + contdir + igosum + 
-                          lag_pch_gdpmax + lgovcrisesdy)
+
+sjp.glmer(a, type = "eff", )
+plot(ggpredict(a, "lagdee2"), ci = T)
+m <- margins(a, variables = "lagdee2", at = c(-27, 0))
+
+plot(marginal_effects(a, icow, variables = "lagdee2", allow.new.levels = T))
+
+predict(a)
+library(lme4)
+a <- glmer(attanyp ~ lagdee2 + icowsal + riveriss + mariss +
+            recmidwt + recnowt + recyeswt + lbdymid +
+            lag_pch_gdpmax + lgovcrisesdy +  lcw +
+            demdy + autdy +
+            lcaprat + ldefense + contdir + igosum + 
+            c + c2 + c3 + 
+            (1 | claimdy) + (1 | year),
+          data = icow, family = binomial(link = "logit"))
+atcoxd <- icow[, colnames(icow) %in% colnames(a@frame)]
+atcoxd <- apply(atcoxd, 2, median, na.rm= T)
+atcoxd <- rbind(atcoxd, atcoxd)
+atcoxd[, "lagdee2"] <- c(-12, -1)
+atcoxd <- as.data.frame(atcoxd)
+
+r <- predict(a, atcoxd, allow.new.levels = F, type = "response")
+
+
+me <- marginal_effects(at, "lagdee2", allow.new.levels = T)
+
+
+  
+
+
+
+
+
+
+
+
+
+marginal_effects(at, "lagdee2", titles = "abcd")
+
+posterior_predict()
+plot(posterior_predict(at, atcoxd, resp = "lagdee2"))
+
+ggpredict(a)
+
+plot(predict(a, as.data.frame(atcoxd)))
+library(margins)
+b <- margins(a, variables = "lagdee2", allow.new.levels = T, type = "response")
+d <- marginal_effects(a, icow, "lagdee2", allow.new.levels = T)
+
+fit <- survfit(atcox1, as.data.frame(atcoxd))
+plot(fit, conf.int = T, col = 1:2)
+
+posterior_predict
+
+at <- brm(attanyp ~ lagdee2 + icowsal + riveriss + mariss +
+           recmidwt + recnowt + recyeswt + lbdymid +
+           lag_pch_gdpmax + lgovcrisesdy +  lcw +
+           demdy + autdy +
+           lcaprat + ldefense + contdir + igosum + 
+           c + c2 + c3 + 
+           (1 | claimdy) + (1 | year),
+         family = "bernoulli",
+         prior = set_prior(prior = "student_t(1, 0, 2.5)", # (degrees of freedom, mean, standard deviation)
+                           class = "b"),
+         chains = 1,
+         iter = 10,
+         data = icow)
+at_plot <- plot(marginal_effects(at, "lagdee2"))
+at_plot$lagdee2$
+ag <- brm(agterm ~ lagdee2 + icowsal + riveriss + mariss +
+            recmidwt + recnowt + recyeswt + lbdymid +
+            lag_pch_gdpmax + lgovcrisesdy +  lcw +
+            demdy + autdy +
+            lcaprat + ldefense + contdir + igosum + 
+            c + c2 + c3 + 
+            (1 | claimdy) + (1 | year),
+          family = "bernoulli",
+          prior = set_prior(prior = "student_t(1, 0, 2.5)", # (degrees of freedom, mean, standard deviation)
+                            class = "b"),
+          cores = 4,
+          data = icow)
+ag2 <- brm(agissterm ~ lagdee2 + icowsal + riveriss + mariss +
+            recmidwt + recnowt + recyeswt + lbdymid +
+            lag_pch_gdpmax + lgovcrisesdy +  lcw +
+            demdy + autdy +
+            lcaprat + ldefense + contdir + igosum + 
+            c + c2 + c3 + 
+            (1 | claimdy) + (1 | year),
+          family = "bernoulli",
+          prior = set_prior(prior = "student_t(1, 0, 2.5)", # (degrees of freedom, mean, standard deviation)
+                            class = "b"),
+          cores = 4,
+          data = icow)
+as.table(summary(ag))
+a <- summary(ag)
+
+mdevtools::source_url("https://raw.githubusercontent.com/jkarreth/JKmisc/master/mcmctab.R")
+mcmctab(ag)
+
+
+
+a <- plot(marginal_effects(ag, "lagdee2"), xlab = "a")
+a <- plot(marginal_effects(ag2, "lagdee2"), lot = FALSE)[[1]] + 
+  scale_color_gradient(low = "#132B43", high = "#56B1F7") +
+  scale_fill_grey()
+
+
+b <- plot(marginal_effects(ag2, "lagdee2", spaghetti  = T))
+a + theme_dark(a)
+
+a$lagdee2$theme <- ggtheme()
+,
+          theme = ggtheem)
+
+theme_set(theme_classic())
+
+
+a$lagdee2$data$lagdee2
+a$lagdee2$mapping
+p
+
+
+
+##############################################################
+a <- glm(agissterm ~ lagdee2 + icowsal + riveriss + mariss +
+           recmidwt + recnowt + recyeswt + bdymid +
+           lag_pch_gdpmax + lgovcrisesdy +  + lcw +
+           demdy + autdy +
+           lcaprat + ldefense + contdir + igosum + 
+           c + c2 + c3,
+         data = icow)
+a <- brm(agissterm ~ lagdee2 + icowsal + riveriss + mariss +
+           recmidwt + recnowt + recyeswt + bdymid +
+           lag_pch_gdpmax + lgovcrisesdy +  + lcw +
+           demdy + autdy +
+           lcaprat + ldefense + contdir + igosum + 
+           c + c2 + c3 + 
+           (1 | claimdy) + (1 | year),
+         family = "bernoulli",
+         cores = 4,
+         data = icow)
+b <- brm(agissterm ~ lagdee2 + icowsal + riveriss + mariss +
+           recmidwt + recnowt + recyeswt + bdymid +
+           lag_pch_gdpmax + lgovcrisesdy +  + lcw +
+           demdy + autdy +
+           lcaprat + ldefense + contdir + igosum + 
+           c + c2 + c3 + 
+           (1 | mm(ccode1, ccode2)) + (1 | year),
+         family = "bernoulli",
+         cores = 4,
+         data = icow)
+c <- brm(agissterm ~ lagdee2 + icowsal + riveriss + mariss +
+           recmidwt + recnowt + recyeswt + bdymid +
+           lag_pch_gdpmax + lgovcrisesdy +  + lcw +
+           demdy + autdy +
+           lcaprat + ldefense + contdir + igosum + 
+           c + c2 + c3 + 
+           (1 | mm(ccode1, ccode2)) + (1 | year),
+         family = "bernoulli",
+         prior = set_prior(prior = "student_t(1, 0, 2.5)", # (degrees of freedom, mean, standard deviation)
+                           class = "b"),
+         cores = 4,
+         data = icow)
+d <- glm(agissterm ~ lagdee + icowsal + riveriss + mariss +
+           recmidwt + recnowt + recyeswt + bdymid +
+           lag_pch_gdpmax + lgovcrisesdy +  + lcw +
+           demdy + autdy +
+           lcaprat + ldefense + contdir + igosum + 
+           c + c2 + c3,
+         data = icow)
+e <- brm(agissterm ~ lagdee + icowsal + riveriss + mariss +
+           recmidwt + recnowt + recyeswt + bdymid +
+           lag_pch_gdpmax + lgovcrisesdy +  + lcw +
+           demdy + autdy +
+           lcaprat + ldefense + contdir + igosum + 
+           c + c2 + c3 + 
+           (1 | mm(ccode1, ccode2)) + (1 | year),
+         family = "bernoulli",
+         prior = set_prior(prior = "student_t(1, 0, 2.5)", # (degrees of freedom, mean, standard deviation)
+                           class = "b"),
+         cores = 4,
+         data = icow)
+
+f <- glm(agissterm ~ lag_depdymilmin + icowsal + riveriss + mariss +
+           recmidwt + recnowt + recyeswt + lbdymid +
+           lag_pch_gdpmax + lgovcrisesdy +  lcw +
+           demdy + autdy +
+           lcaprat + ldefense + contdir + igosum + 
+           c + c2 + c3,
+         data = icow)
+
 
 varlist1 = list("Minimum Economic Dependence" = "lagdee2",
-               "Claim Salience" = "icowsal",
-               "Number of Obs." = "nfail")
-varlist2 = list("Maximum Economic Dependence" = "lagmac2",
-               "Claim Salience" = "icowsal",
-               "Number of Obs." = "nfail")
+                "Maximum Economic Dependence" = "lagmac2",
+                "Claim Salience" = "icowsal",
+                "River Claim" = "riveriss",
+                "Maritime Claim" = "mariss",
+                "Percent Change in GDP" = "lag_pch_gdpmax",
+                "Government Crisis in Either State" = "lgovcrisesdy",
+                "Any MID Initiated this Year" = "midissyr",
+                "Recent MIDs" = "recmidwt",
+                "Recent Fatal MIDs" = "recfatwt",
+                "Recent Failed CM Attempts" = "recnowt",
+                "Recent Successful CM Attempts" = "recyeswt",
+                "Capability Ratio" = "lcaprat",
+                "Joint Democracy" = "demdy",
+                "Joint Autocracy" = "autdy",
+                "Defensive Alliance" = "ldefense",
+                "Contiguity" = "contdir",
+                "Shared IGO Membership" = "igosum")
 
-deemin <- round(with(icow, mean(lagdee2, na.rm = 2) - 2 * sd(lagdee2, na.rm = T)), 0)
-deemax <- round(with(icow, mean(lagdee2, na.rm = 2) + 2 * sd(lagdee2, na.rm = T)), 0)
+deemin <- round(with(icow, mean(lagdee2, na.rm = 2) - 2 * sd(lagdee, na.rm = T)), 0)
+deemax <- round(with(icow, mean(lagdee2, na.rm = 2) + 2 * sd(lagdee, na.rm = T)), 0)
 macmin <- round(with(icow, mean(lagmac2, na.rm = 2) - 2 * sd(lagmac2, na.rm = T)), 0)
 macmax <- round(with(icow, mean(lagmac2, na.rm = 2) + 2 * sd(lagmac2, na.rm = T)), 0)
 
-##### Descriptives ------------------------------------------------------------------
-desc <- icow %>%
-  group_by(claimdy) %>%
-  summarize(
-    natt = if_else(sum(attanyp, na.rm = T) > 0, 1, 0),
-    nag = if_else(sum(agree, na.rm = T) > 0, 1, 0)
-  )
-table(desc$natt)
-table(desc$nag)
-desc2 <- icow %>%
-  group_by(claimdy, year) %>%
-  summarize(
-    natt = if_else(sum(attanyp, na.rm = T) > 0, 1, 0),
-    nag = if_else(sum(agree, na.rm = T) > 0, 1, 0)
-  )
-table(desc2$natt)
-table(desc2$nag)
+atcox <- coxph(update.formula(fullform, Surv(at_start, at_stop, attanyp) ~ lagdee + .),
+               data = icow); summary(atcox)
+atcoxd <- icow[, colnames(icow) %in% attr(atcox$terms, "term.labels")]
+atcoxd <- apply(atcoxd, 2, median, na.rm= T)
+atcoxd <- rbind(atcoxd, atcoxd)
+atcoxd[, "lagdee2"] <- c(-27, -1)
+fit <- survfit(atcox1, as.data.frame(atcoxd))
+plot(fit, conf.int = T, col = 1:2)
 
+agcox <- coxph(update.formula(fullform, Surv(agstart, agstop, agterm) ~ lagdee2 + .),
+               data = icow); summary(agcox)
+agcoxd <- icow[, colnames(icow) %in% attr(agcox$terms, "term.labels")]
+agcoxd <- apply(agcoxd, 2, median, na.rm= T)
+agcoxd <- rbind(agcoxd, agcoxd)
+agcoxd[, "lagdee2"] <- c(-27, -1)
+fit <- survfit(agcox, as.data.frame(agcoxd))
+plot(fit, conf.int = T, col = 1:2)
 
-##### attempt models---------------------------------------------
-cl <- makeCluster(4, "SOCK"); registerDoSNOW(cl)
-at1 <- tvcure(update.formula(hazform, Surv(at_start, at_stop, attanyp) ~ lagdee2 + .), 
-              cureform = update.formula(cureform, ~ lagdee2 + .),
-             data = icow, 
-             var = T, nboot = 100, brglm = F); summary(at1)
-at2 <- tvcure(update.formula(hazform, Surv(at_start, at_stop, attanyp) ~ lagmac2 + .),
-              cureform =  update.formula(cureform, ~ lagmac2 + .),
-              data = icow,
-              var = T, nboot = 100, brglm = T, parallel = T); summary(at2)
+agisscox <- coxph(update.formula(fullform, Surv(agiss_start, agiss_stop, agissterm) ~ lagdee2 + . + cluster(claimdy)),
+               data = icow); summary(agisscox)
+agisscoxd <- icow[, colnames(icow) %in% attr(agisscox$terms, "term.labels")]
+agissd <- apply(agisscoxd, 2, median, na.rm= T)
+agissd <- rbind(agissd, agissd)
+agissd[, "lagdee2"] <- c(-27, -1)
+# a <- survfit(agisscox, as.data.frame(agissd))
+# library(survminer)
+# ggsurvplot(survfit(agisscox, data = agissd), data = agissd)
+# plot(fit, conf.int = T, col = 1:2)
 
-# Predictions 
-at1pred  <-  prediction3(at1, "mariss", c(0), "basesurv")
+agisscox <- coxph(Surv(agiss_start, agiss_stop, agissterm) ~ lagdee2 + 
+                    icowsal + riveriss + mariss +
+                    recmidwt + recnowt + recyeswt + cluster(claimdy),
+                  data = icow); summary(agisscox)
 
-at1pred  <-  prediction3(at1, "lagdee2", c(seq(deemin, deemax, 1)), "uncureprob")
-at2pred  <-  prediction3(at2, "lagmac2", c(seq(macmin, macmax, 1)), "uncureprob")
-at1preds <- prediction3(at1, "lagdee2", c(-27, -.917), "spop")
-at2preds <- prediction3(at2, "lagmac2", c(macmin, macmax), "spop")
-
-# Probabilty plots
-at1plot <- plot(at1pred)
-at1plot <- at1plot + xlab("Minimum Economic Dependence") + ylab("Potential for Agreement")
-at2plot <- plot(at2pred)
-at2plot <- at2plot + xlab("Maximum Economic Dependence") + ylab("Potential for Agreement")
-
-# get_legend<-function(myggplot){
-#   tmp <- ggplot_gtable(ggplot_build(myggplot))
-#   leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
-#   legend <- tmp$grobs[[leg]]
-#   return(legend)
-# }
-# get_legend<-function(myggplot){
-#   tmp <- ggplot_gtable(ggplot_build(myggplot))
-#   leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
-#   legend <- tmp$grobs[[leg]]
-#   return(legend)
-# }
-
-# Survival plots
-at1plots <- plot(at1preds)
-at1plots <- at1plots + 
-  scale_fill_discrete(name = "Minimum Economic \nDependence", labels = c("Low", "High")) +
-  scale_color_discrete(name = "Minimum Economic \nDependence", labels = c("Low", "High")) +
-  scale_linetype_discrete(name = "Minimum Economic \nDependence", labels = c("Low", "High")) + 
-  theme(legend.title.align = 0.5) 
-legend1 <- ggpubr::get_legend(at1plots)
-at1plots <- at1plots + theme(legend.position = "none")
-at1plotf <- ggarrange(at1plot, at1plots, legend1, ncol = 3, widths = c(1, 1, 0.4))
-
-# at1plotf <- grid.arrange(at1plot, at1plots, legend1, ncol = 2, heights = c(1, 0.1), layout_matrix = rbind(c(1,2), c(1,3)))
-# b <- grid.arrange(at2plot, at2plots, legend2, ncol = 2, heights = c(1, 0.1), layout_matrix = rbind(c(1,2), c(3,3)))
-
-# 
-
-at2plots <- plot(at2preds)
-at2plots <- at2plots + 
-  scale_fill_discrete(name = "Maximum Economic \nDependence", labels = c("Low", "High")) +
-  scale_color_discrete(name = "Maximum Economic \nDependence", labels = c("Low", "High")) +
-  scale_linetype_discrete(name = "Maximum Economic \nDependence", labels = c("Low", "High")) + 
-  theme(legend.title.align = 0.5) 
-legend2 <- ggpubr::get_legend(at2plots)
-at2plots <- at2plots + theme(legend.position = "none")
-at2plotf <- ggarrange(at2plot, at2plots, legend2, ncol = 3, widths = c(1, 1, 0.4))
-
-# # Combined plot
-# # ggarrange(at1plot, at1plots, at2plot, at2plots, heights = c(1, 5, 1, 1))
-# # grid.arrange(at1plot, at1plots, legend1, ncol = 2, heights = c(1, 0.1), layout_matrix = rbind(c(1,2), c(3,3)))
-# a <- grid.arrange(at1plot, at1plots, legend1, ncol = 2, heights = c(1, 0.1), layout_matrix = rbind(c(1,2), c(1,3)))
-# b <- grid.arrange(at2plot, at2plots, legend2, ncol = 2, heights = c(1, 0.1), layout_matrix = rbind(c(1,2), c(3,3)))
-# grid.arrange(a, b)
-grid.arrange(at1plot, at1plots, legend1,
-             at2plot, at2plots, legend2,
-             ncol = 3, nrow = 2, widths = c(1, 1, 0.5))
-             # nrow = 4, heights = c(1, 0.1, 1, .1),
-             
-
-# 
-# at1_t <- tvtable.tvcure(at1, format = "long", varlist = varlist1)
-# at2_t <- tvtable.tvcure(at2, format = "long", varlist = varlist2)
-# at_table <- tvtable_combine(c("at1_t", "at2_t"), format = "long", footnote = "text", varlist = varlist)
-# x <- tvtable_xtable(at_table, caption = "Peaceful Settlement Attempts")
-# printer(x, file = "./tables/at_table.tex", tabular.enviroment = "tabularx", booktabs = T)
-# gridExtra::grid.arrange(at1plot, at2plot, at1plots, at2plots, layout_matrix = c(2, 2))
-
-##### agreement models-------------------------------------------
-ag1 <- tvcure(update.formula(hazform, Surv(agstart, agstop, agterm) ~ lagdee2 + .),
-              cureform = update.formula(cureform, ~ lagdee2 + .),
-              data = icow, 
-              var = T, nboot = 100, brglm = T); summary(ag1)
-ag2 <- tvcure(update.formula(hazform, Surv(agstart, agstop, agterm) ~ lagmac2 + .),
-             cureform = update.formula(cureform, ~ lagmac2 + .),
-             data = icow, 
-             var = T, nboot = 100, brglm = T); summary(ag2)
-
-# Predictions and plots
-ag1pred <- prediction3(ag1, "lagdee2", c(seq(deemin, deemax, 1)), "uncureprob")
-ag2pred <- prediction3(ag2, "lagmac2", c(seq(macmin, macmax, 1)), "uncureprob")
-
-ag1plot <- plot(ag1pred)
-ag1plot <- ag1plot + xlab("Minimum Economic Dependence"); ag1plot
-ag2plot <- plot(ag2pred)
-ag2plot <- ag2plot + xlab("Maximum Economic Dependence"); ag2plot
-ggarrange(ag1plot, ag2plot)
-ag1preds <- prediction3(ag1, "lagdee2", c(deemin, deemax), "spop")
-ag2preds <- prediction3(ag2, "lagmac2", c(macmin, macmax), "spop")
-ag1plots <- plot(ag1preds)
-ag1plots <- ag1plots + xlab("Minimum Economic Dependence"); ag1plot
-ag2plots <- plot(ag2preds)
-ag2plots <- ag2plots + xlab("Maximum Economic Dependence"); ag2plot
-ggarrange(ag1plots, ag2plots)
-ggarrange(ag1plot, ag1plots)
-ggarrange(ag1plot, ag1plots, ag2plot, ag2plots)
-
-##### Claim termination models ----------------------------------------------------------------
-clterm1 <- tvcure(update.formula(hazform, Surv(clstart, clstop, clterm) ~ lagdee2 + .),
-                  cureform = update.formula(cureform, ~ lagdee2 + .),
-                data = icow, 
-                var = T, nboot = 100, brglm = T); summary(clterm1)
-clterm2 <- tvcure(update.formula(hazform, Surv(clstart, clstop, clterm) ~ lagmac2 + .),
-                  cureform = update.formula(cureform, ~ lagmac2 + .),
-                 data = icow, 
-                 var = T, nboot = 100, brglm = T); summary(clterm2)
-
-
-##### MID models ------------------------------------------
-midterm1 <- tvcure(update.formula(hazform, Surv(clstart, clstop, clterm) ~ lagdee2 + .),
-                 cureform = update.formula(cureform, ~ lagdee2 + .), 
-                 data = icow, 
-                 var = F, nboot = 100, brglm = T); summary(midterm1)
-midterm2 <- tvcure(update.formula(hazform, Surv(midstart, midstop, midissyr) ~ lagmac2 + .),
-                  cureform =  ~ update.formula(cureform, ~ lagmac2 + .),
-                  data = icow,
-                  var = T, nboot = 100, brglm = T); summary(midterm2)
