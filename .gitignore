@@ -11,14 +11,17 @@ mpd2018.xlsx
 bdm2s2_nation_year_data_may2002.dta
 codebooks/
 ICOWclaimag.dta
-data/
-dataOriginals/
-trash/
+
+models/
 icow_part_cyr_ct.csv
 Data Analysis.Rproj
 .Rproj.user/
 .Rproj.user (Selective Sync Conflict 1)/
-models/
 tables/
 .Rproj.user (Selective Sync Conflict 2)/C9B7010C/sources/prop/5301B4CA
 *Selective Sync Conflict*
+
+# Old files
+./analysis/old analysis files/
+./tables/old tables/
+./figures/old figures/
