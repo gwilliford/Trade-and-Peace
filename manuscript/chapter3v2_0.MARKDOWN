@@ -1,8 +1,8 @@
 # Introduction
 
+## Conceptualization of Claim Resolution
+
 Conceptually, actors bargaining over territory can resolve claims in one of three ways. First, one state may choose to seize the contested territory or coerce the other disputant to relinquish possession of the territory by force. Second, the states can come to some negotiated decision regarding a mutually acceptable division of the territory through the use of peaceful conflict management mechanisms. Notably, such an agreement may end up codifying the status quo. Third, one state may choose to drop their claim by relinquishing it. This may be done either officially, wherein a representative of the state renounces the claim, or unofficially, wherein state policymakers quit pursuing a claim and it comes to a de facto end.
-
-
 
 # Lit Review
 
@@ -28,53 +28,46 @@ Theory
 - Claims create opp costs
 - Since claims themselves create potential opportunity costs, those engaged in bilateral trade have an incentive to do more than simply oppose military conflict. They also have an incentive to bring an end to the claim itself to secure their existing trading relationships and potentially expand them as the barriers that claims create fall away. 
 
-territorial claims aren't 
-
 # Domestic Politics and Territory
 
+While settling territorial claims may be unpopular in some cases, the potential economic benefits of settlement may provide elites with incentives to pressure their leaders to settle claims in spite of those drawbacks. 
 
+An example of this dynamic involves the claim between the United States and the United Kingdom over the territory of Oregon. 
 
-# Domestic Politics and Claim Resolution
+Trade --> Settlement --> More Trade
 
-Which option states choose to pursue depends on a mix of domestic and international factors. The linkages between domestic politics and the management of territorial claims can be seen by conceptualizing territorial claims as two-level games \citep{putnam1988}. Claims themselves constitute a bargaining problem at the international level, wherein both states compete to obtain some distribution of a contested piece of territory. A state and its government may have an inherent interest in controlling territory for reasons related to foreign policy, such as security concerns or establishing a sphere of influence in an area. In order for a claim to be resolved, states must identify a distribution of the territory that both prefer to leaving the claim unresolved. When states can identify an agreement that is acceptable to both, the two have an incentive to settle and end the costs associated with the ongoing claim.
+Potential Gains from Settling --> Settlement --> Increased Trade
 
-The state has inherent interests in the outcome of territorial claims, such as security, sovereignty, status, and establishing a sphere of influence. 
+## Endogeneity
 
-Whether two states can identify a mutually acceptable bargain depends on the preferences of influential domestic actors within both states. Because leaders are beholden to societal actors at the domestic level who have interests in the international environment, leaders must also consider domestic political constraints when negotiating at the international level. All leaders, regardless of regime type, depend on societal actors who have the power to sustain or remove them from power \citep{bdm2003}, a group known as the winning coalition. In order to retain office, leaders must pursue policies that maximize the returns these groups receive. Thus, if leaders agree to bargains that the winning coalition find unacceptable, leaders risk being replaced. 
+Before moving forward, It is necessary to address potential concerns about endogeneity. From the foregoing discussion, it is clear that the relationship between trade and territorial claims is complex. 
 
-**Ratification**
+The existence of a territorial claim should lead to lower levels of trade than the counterfactual case in which, all else equal, no claim exists. Nonetheless, those engaged in bilateral trade still stand to gain from an increase in trade. The greater the amount of bilateral trade that exists in the status quo, the more clout these groups should have to push for claim termination.
 
-The preferences of leaders are also constrained insofar as domestic actors have the power to implicitly or explicitly ratify agreements. 
+An alternative scenario is one in which there is a small amount of trade. Curvilinear effect?
 
-With respect to ratification, the successful implementation of any agreement requires the cooperation of at least some domestic actors who have the power to stymie its entry into force.\footnote{Following \citet{putnam1988}, I use the term ``ratification’’ to refer broadly to any process at the domestic level that is necessary to implement international agreements. This includes formal processes required for a treaty to enter into force, such as approval by a legislature, or informal processes by which other powerful veto players (e.g., the military, bureaucracies, or administration officials) must approve of an agreement in order for it to be implemented effectively.} 
+# Domestic Politics and The Management of Territorial Claims
 
-The implementation of an agreement is thus contingent on whether the leader can obtain the support of relevant domestic actors by convincing them that the outcome of an agreement is preferable to the status quo. The number, size, and constitution of these actors varies widely depending on domestic institutions and the content of an agreement. Some treaties may be subject to the direct approval of voters in the form of referenda or plebiscites and must therefore be broadly popular with the public as a whole in order to be implemented. In other cases, ratification depends on the support of elected officials, who in turn are beholden to the preferences of constituents and/or subject to lobbying by influential groups. In order to obtain domestic support for ratification, leaders must thus be able to piece together coalitions of influential actors that support the agreement \citep{fearon1998}.
+%%% Domestic audiences influence policy over territory
 
-Leaders who sign agreements that are unpopular among their domestic supporters will be unable to obtain their support in the process of ratifying an agreement and adhering to it over the long term. 
+	% \footnote{Leaders who have been in office longer are more likely to make concessions or sign agreements. This suggests that leaders gain experience over time and are therefore better able to navigate the domestic pitfalls associated with settlement \citet{chiozza2003a}.} 
+	% Note: Consistent with this, \citet{simmons2002} found that states with higher levels of judicial independence are more likely to comply with settlements reached as the result of international arbitration or adjudication. This suggests that domestic populations in countries with strong rule of law may be more willing to accept the decisions of international legal bodies, even if they disagree with them.
+	% International institutions also play an important role in fostering multilateral talks, especially when those institutions possess the capacity to intervene in disputes \citep{shannon2009}. 
+	
+	% Attempts:
+	% Findings related to territorial salience and conflict management generally support the notion that domestic politics plays a significant role in determining what types of policies leaders can pursue. As the salience of disputed territory increases, the value that domestic audiences attach to it increases (although this logic also applies to leaders, since they will be more concerned about external threats will to highly salient territory). As a result, settlements over highly-salient disputes should be more costly for leaders. % \footnote{However, states engage in peaceful settlement attempts more frequently over highly salient territory \citet{hensel2001, hensel2008}. This suggests that states are more invested and willing to pay the transaction costs associated with settlement attempts over valuable territory, but are less likely to actually reach an agreement over it.} %\citet{hensel2005a} finds that this is only true of intangible salience. Tangible salience decreases the probability of negotiations. 
 
-As such, reaching an agreement requires that international negotiators identify a distribution of the territory that is not only acceptable to both states for foreign policy reasons but is also acceptable to the winning coalition of both states. 
+% Compliance
+% However, the factors that influence which policies domestic audiences support remain undertheorized. One exception is the steps-to-war theory, which illustrates how dyadic interactions between disputants influence the preferences of domestic audiences. 
+% Todo: huth1998
+% In addition, states that have previously lost territory to another state are more likely to pursue the use of force against their rivals \citep{huth1998}.
+% Todo: add senese cite here
+​%(i.e., a ``second-image reversed'' explanation gourevitch1978
 
-# Domestic Politics and Claim Management
+# \section{Domestic Politics and Claim Management}
 
-Trade builds support for claim resolution in 3 ways.
+% Issue Salience
 
-Opp costs lead to domestic opposition 
-
-These groups have an incentive to lobby leaders to seek resolution to claims that 
-
-Prevents commitment problems
-
-# 
-
-Different variants make different assumptions about the actors 
-
-MVT
-
-Pluralism
-
-# Literature Review According to McDonald
-
-Five types of trading
-
-## Regional Trade Organizations
+% What went here?
+%TODO Look at Fravel 2008
 
