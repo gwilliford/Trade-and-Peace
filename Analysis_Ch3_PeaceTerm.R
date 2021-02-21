@@ -4,6 +4,7 @@
 setwd("C:/Users/gwill/Dropbox/Research/Dissertation/chapter3")
 
 library(readstata13)
+library(dplyr)
 library(tvcure)
 library(doSNOW)
 library(compiler)
@@ -25,19 +26,21 @@ registerDoSNOW(cl)
 
 peaceatt = read.dta13("C:/Users/gwill/Dropbox/Research/Dissertation/Data Management/outputdata/ICOWPeaceAttemptData.dta")
 peaceatt = rename(peaceatt, "st" = "_st", "event" = "_d", "stop" = "_t", "start" = "_t0")
+peaceatt$tradedep_geomean = peaceatt$tradedep_geomean/max(peaceatt$tradedep_geomean, na.rm = T)
 
 peaceagr = read.dta13("C:/Users/gwill/Dropbox/Research/Dissertation/Data Management/outputdata/ICOWPeaceAgreementData.dta")
 peaceagr = rename(peaceagr, "st" = "_st", "event" = "_d", "stop" = "_t", "start" = "_t0")
 
 peaceterm = read.dta13("C:/Users/gwill/Dropbox/Research/Dissertation/Data Management/outputdata/ICOWPeaceTerminationData.dta")
 peaceterm = rename(peaceterm, "st" = "_st", "event" = "_d", "stop" = "_t", "start" = "_t0")
+peaceterm$lnt = log(peaceterm$stop)
 
 ################################################################################
 # Descriptive Statistics
 ################################################################################
 
 # Number of claims peacefully resolved
-table(icow_claimdy$pterm2)
+# table(icow_claimdy$pterm3)
 
 # Kaplan-Meier plot for peaceful termination
 a = with(peaceterm, survfit(Surv(start, stop, event) ~ 1))
@@ -50,6 +53,13 @@ pterm_sdbelow = pterm_med - pterm_sd * 2
 abline(v = pterm_med, lty = 2)
 abline(v = pterm_sdabove, lty = 3)
 abline(v = pterm_sdbelow, lty = 3)
+
+# Number of interstate acd conflicts
+a = read.dta13("C:/Users/gwill/Dropbox/Data/UCDP/Conflict Year Dataset/ucdp-prio-acd-171.dta")
+a$ccodeb = as.numeric(a$gwnob)
+b = a %>% filter(!is.na(ccodeb))
+
+length(unique(b$conflictid))
 
 ################################################################################
 # Analysis
@@ -71,13 +81,20 @@ att_coxphf = coxphf(Surv(start, stop, event) ~ ltradedep_geomean + lpchcap + cap
                 penalty = .1, 
                 maxit = 100); summary(att_coxphf)
 
-att_cure = tvcure(Surv(start, stop, event) ~ lpchcap + recmidwt + recnowt + recyeswt + bdymid,
+att_logit = glmer(event ~ ltradedep_geomean + lpchcap + caprat +
+                  icowsal + riveriss + mariss + 
+                  recmidwt + recnowt + recyeswt + bdymid + 
+                  demdy + autdy + contdir + defense + igosum +
+                  stop + I(stop^2) + I(stop^3) + (1 | claimdy) + (1 | year), family = binomial(link = "logit"),
+                data = peaceatt); summary(att_logit)
+
+att_cure = tvcure(Surv(start, stop, event) ~ ltradedep_geomean + recnowt + recyeswt + bdymid, # recmidwt causes a problem here
             cureform = ~ ltradedep_geomean + caprat +
               icowsal + riveriss + mariss +
               demdy + autdy + contdir + defense + igosum, 
             data = peaceatt, 
             link = "probit",
-            brglm = T); summary(att_cure)
+            brglm = T); summary.tvcure(att_cure)
 
 
 # Peace agreements -------------------------------------------------------------
@@ -100,7 +117,18 @@ agr_cure = tvcure(Surv(start, stop, event) ~ lpchcap + recmidwt + recnowt + recy
                     demdy + autdy + contdir + defense + igosum, 
                   data = peaceagr, 
                   link = "probit",
-                  brglm = T); summary(agr_cure)
+                  brglm = T); summary.tvcure(agr_cure)
+prediction4(agr_cure, "uncureprob", "ltradedep_geomean", c(0, 0.1), CI = F)
+agr_cure2 = tvcure(Surv(start, stop, event) ~ ltradedep_geomean + lpchcap + recmidwt + recnowt + recyeswt + bdymid,
+                  cureform = ~  caprat +
+                    icowsal + riveriss + mariss +
+                    demdy + autdy + contdir + defense + igosum, 
+                  data = peaceagr, 
+                  link = "probit",
+                  brglm = T); summary.tvcure(agr_cure)
+prediction4(agr_cure2, "suncure", "ltradedep_geomean", c(0, 0.1), CI = F)
+
+
 
 # Peaceful termination -----------------------------------------------------------
 set_cox = coxph(Surv(start, stop, event) ~ ltradedep_geomean + lpchcap + caprat +
@@ -116,17 +144,20 @@ set_coxphf = coxphf(Surv(start, stop, event) ~ ltradedep_geomean + lpchcap + cap
                       demdy + autdy + contdir + defense + igosum,
                     data = set_x); summary(set_coxphf)
 
-set_cure = tvcure(Surv(start, stop, event) ~ lpchcap + recmidwt + recnowt + recyeswt + bdymid,
+set_cure = tvcure(Surv(start, stop, event) ~ ltradedep_geomean + lpchcap + recmidwt + recnowt + recyeswt + bdymid,
                   cureform = ~ ltradedep_geomean + caprat +
                     icowsal + riveriss + mariss +
                     demdy + autdy + contdir + defense + igosum, 
                   data = peaceterm, 
                   link = "probit",
                   brglm = T); summary(set_cure)
-
-
-a = coxph(Surv(start, stop, event) ~ ltradedep_geomean,
-                data = peaceterm, x = T); summary(a)
+set_cure = tvcure(Surv(start, stop, event) ~ ltradedep_geomean + lpchcap + recmidwt + recnowt + recyeswt + bdymid,
+                  cureform = ~ ltradedep_geomean + caprat +
+                    icowsal + riveriss + mariss +
+                    demdy + autdy + contdir + defense + igosum, 
+                  data = peaceterm, 
+                  link = "probit",
+                  brglm = T); summary(set_cure)
 
 
 
@@ -139,16 +170,34 @@ m1 = coxph(Surv(start, stop, event) ~ ltradedep_geomean + lpchcap + caprat +
              recmidwt + recnowt + recyeswt + bdymid + 
              demdy + autdy + contdir + defense + igosum,
            data = peaceterm); summary(m1)
-m2 = tvcure(Surv(start, stop, event) ~ ltradedep_geomean +
+m1 = tvcure(Surv(start, stop, event) ~ ltradedep_geomean + ltradedep_geomean:lnt + 
               lpchcap + recmidwt + recnowt + recyeswt + bdymid,
             cureform = ~ ltradedep_geomean + caprat + icowsal + riveriss + mariss + demdy + contdir + defense, 
             data = peaceterm,
             link = "probit",
-            brglm = T); summary(m2)
+            brglm = T, var = T)
+m2_sch = sch(m2)
+plotsch(m2_sch, "ltradedep_geomean")
+plotsch(m2_sch, "recyeswt")
+
 m4 = tvcure(Surv(start, stop, event) ~ ltradedep_geomean + lpchcap + recmidwt + recnowt + recyeswt + bdymid,
             cureform = ~ icowsal + riveriss + mariss + demdy + autdy + contdir + defense + igosum, 
             data = peaceterm, 
             brglm = F); summary(m4)
+
+
+
+m2 = tvcure(Surv(start, stop, event) ~ lpchcap + recmidwt + bdymid,
+            cureform = ~ ltradedep_geomean + caprat + icowsal + demdy + contdir + defense, 
+            data = peaceterm, 
+            link = "probit",
+            brglm = T, var = T)
+
+m2 = tvcure(Surv(start, stop, event) ~ ltradedep_geomean + lpchcap + recmidwt + bdymid,
+            cureform = ~ caprat + icowsal + demdy + contdir + defense, 
+            data = peaceterm, 
+            link = "probit",
+            brglm = T, var = T)
 
 # Theory - public pushes policymakers to take action - leads to settlement attempts and settlements
 ################################################################################
