@@ -12,7 +12,13 @@ bdm2s2_nation_year_data_may2002.dta
 codebooks/
 ICOWclaimag.dta
 
+analysis/
+figures/
+manuscript/
 models/
+notes/
+old analysis files/
+
 icow_part_cyr_ct.csv
 Data Analysis.Rproj
 .Rproj.user/
