@@ -15,7 +15,7 @@ Does economic interdependence influence how states manage claims over contentiou
 
 ## Software Used
 
-Analysis was conducted in R, version 4.01. The analysis was completed using my R package for estimating proportional hazards cure models with time-varying covariates. The package, tvcure, can be found [here](https://github.com/gwilliford/Proportional-Hazards-Cure-Models).
+Analysis was conducted in R, version 4.01. The analysis was completed using my R package for estimating proportional hazards cure models with time-varying covariates. The package, tvcure, can be found [here](https://github.com/gwilliford/tvcure).
 
 ## File Descriptions
 
