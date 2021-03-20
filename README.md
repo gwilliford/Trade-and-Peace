@@ -1,6 +1,6 @@
 # Replication Data for Trade and Peace
 
-Contains replication data for Chapter 4 of my dissertation, "Domestic Politics, Contentious
+Contains replication code and data for Chapter 4 of my dissertation, "Domestic Politics, Contentious
 Issue Claims, and Economic
 Interdependence."
 
