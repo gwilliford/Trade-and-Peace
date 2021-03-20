@@ -1,6 +1,8 @@
-# Replication Data for Trade and Peace
+# Domestic Politics, Contentious
+Issue Claims, and Economic
+Interdependence
 
-Contains replication code and data for Chapter 4 of my dissertation, "Domestic Politics, Contentious
+R code and data for Chapter 4 of my dissertation: George W. Williford. 2021. "Domestic Politics, Contentious
 Issue Claims, and Economic
 Interdependence."
 
