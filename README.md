@@ -1,7 +1,5 @@
-# Domestic Politics, Contentious
-Issue Claims, and Economic
+# Domestic Politics, Contentious Issue Claims, and Economic
 Interdependence
-
 R code and data for Chapter 4 of my dissertation: George W. Williford. 2021. "Domestic Politics, Contentious
 Issue Claims, and Economic
 Interdependence."
